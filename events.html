@@ -1,0 +1,2513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS2 Event Command Center</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-primary: #0a0b0f;
+    --bg-secondary: #111219;
+    --bg-card: #161722;
+    --bg-card-hover: #1c1d30;
+    --bg-input: #0d0e15;
+    --border: #2a2b3d;
+    --border-active: #4a4bff;
+    --text-primary: #e8e9f0;
+    --text-secondary: #8b8ca7;
+    --text-muted: #555670;
+    --accent-blue: #4a7dff;
+    --accent-cyan: #00d4ff;
+    --accent-green: #00ff88;
+    --accent-orange: #ff8c42;
+    --accent-red: #ff4757;
+    --accent-purple: #9b59ff;
+    --accent-yellow: #ffd32a;
+    --accent-pink: #ff6b9d;
+    --star-1: #7a8899;
+    --star-2: #4ecdc4;
+    --star-3: #f7b731;
+    --star-4: #ff6b6b;
+    --star-5: #e056fd;
+    --tier-1: #ffd700;
+    --tier-2: #c0c0c0;
+    --tier-3: #cd7f32;
+    --glow-blue: 0 0 20px rgba(74,125,255,0.3);
+    --glow-cyan: 0 0 20px rgba(0,212,255,0.3);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(74,125,255,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(155,89,255,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(0,212,255,0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+/* === HEADER === */
+.header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: rgba(10,11,15,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 1000;
+}
+
+.header-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-right: 40px;
+}
+
+.header-logo span {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    display: block;
+    background: linear-gradient(135deg, var(--text-secondary), var(--text-muted));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-top: -2px;
+}
+
+.nav-tabs { display: flex; gap: 4px; flex: 1; }
+
+.nav-tab {
+    padding: 8px 20px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.25s;
+    position: relative;
+}
+
+.nav-tab:hover { color: var(--text-primary); background: rgba(74,125,255,0.08); }
+.nav-tab.active { color: var(--accent-cyan); background: rgba(0,212,255,0.08); }
+.nav-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 20%; right: 20%;
+    height: 2px;
+    background: var(--accent-cyan);
+    border-radius: 2px;
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* === MAIN === */
+.main {
+    margin-top: 60px;
+    padding: 24px;
+    position: relative;
+    z-index: 2;
+}
+
+.page { display: none; animation: fadeIn 0.3s ease; }
+.page.active { display: block; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* === LOADING === */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s;
+}
+
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+.loading-spinner {
+    width: 50px; height: 50px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+    margin-top: 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: var(--text-secondary);
+    letter-spacing: 3px;
+}
+
+/* === CARDS === */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.25s;
+}
+
+.card:hover { border-color: rgba(74,125,255,0.3); }
+
+.card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-title .icon {
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+}
+
+/* === GRIDS === */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* === STATS === */
+.stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 4px 0;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* === BADGES === */
+.star-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 1px;
+}
+
+.star-badge.s1 { background: rgba(122,136,153,0.15); color: var(--star-1); border: 1px solid rgba(122,136,153,0.3); }
+.star-badge.s2 { background: rgba(78,205,196,0.12); color: var(--star-2); border: 1px solid rgba(78,205,196,0.3); }
+.star-badge.s3 { background: rgba(247,183,49,0.12); color: var(--star-3); border: 1px solid rgba(247,183,49,0.3); }
+.star-badge.s4 { background: rgba(255,107,107,0.12); color: var(--star-4); border: 1px solid rgba(255,107,107,0.3); }
+.star-badge.s5 { background: rgba(224,86,253,0.12); color: var(--star-5); border: 1px solid rgba(224,86,253,0.3); }
+
+.tier-badge {
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+}
+
+.tier-badge.t1 { background: rgba(255,215,0,0.12); color: var(--tier-1); border: 1px solid rgba(255,215,0,0.3); }
+.tier-badge.t2 { background: rgba(192,192,192,0.12); color: var(--tier-2); border: 1px solid rgba(192,192,192,0.3); }
+.tier-badge.t3 { background: rgba(205,127,50,0.12); color: var(--tier-3); border: 1px solid rgba(205,127,50,0.3); }
+
+.region-badge {
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.region-badge.global { background: rgba(74,125,255,0.12); color: var(--accent-blue); }
+.region-badge.america { background: rgba(0,255,136,0.1); color: var(--accent-green); }
+.region-badge.europe { background: rgba(255,140,66,0.1); color: var(--accent-orange); }
+.region-badge.asia { background: rgba(255,107,157,0.1); color: var(--accent-pink); }
+
+/* === TABLE === */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.data-table thead th {
+    text-align: left;
+    padding: 10px 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.data-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(42,43,61,0.4);
+    vertical-align: middle;
+}
+
+.data-table tbody tr { transition: background 0.15s; }
+.data-table tbody tr:hover { background: rgba(74,125,255,0.04); }
+
+.rank-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 30px;
+    display: inline-block;
+}
+
+.rank-num.top3 { color: var(--accent-yellow); }
+.rank-num.top10 { color: var(--accent-cyan); }
+
+.team-name { font-weight: 600; font-size: 14px; }
+
+.points-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-cyan);
+}
+
+/* === FILTERS === */
+.filters-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-group { display: flex; gap: 4px; }
+
+.filter-btn {
+    padding: 6px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+.filter-btn.active { background: rgba(74,125,255,0.12); border-color: var(--accent-blue); color: var(--accent-blue); }
+
+.search-input {
+    padding: 6px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 200px;
+}
+
+.search-input:focus { border-color: var(--accent-blue); }
+.search-input::placeholder { color: var(--text-muted); }
+
+/* === ANALYSIS PANEL === */
+.analysis-panel {
+    background: linear-gradient(135deg, rgba(74,125,255,0.06), rgba(0,212,255,0.04));
+    border: 1px solid rgba(74,125,255,0.2);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.analysis-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent-cyan);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.analysis-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.analysis-factors {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.factor-item {
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.factor-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.factor-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* === BUTTONS === */
+.btn {
+    padding: 10px 24px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(74,125,255,0.4);
+}
+
+.btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover { border-color: var(--accent-blue); }
+
+.btn-confirm {
+    background: linear-gradient(135deg, var(--accent-green), #00cc6a);
+    color: #0a0b0f;
+    font-weight: 800;
+}
+
+.btn-confirm:hover {
+    box-shadow: 0 4px 20px rgba(0,255,136,0.3);
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: rgba(255,71,87,0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(255,71,87,0.3);
+}
+
+.btn-danger:hover { background: rgba(255,71,87,0.25); }
+
+/* === SECTION HEADING === */
+.section-heading {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-heading .sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 2px;
+}
+
+/* === MODAL === */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 950px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 32px;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover { background: var(--accent-red); color: white; border-color: var(--accent-red); }
+
+.modal h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.modal h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+    margin: 20px 0 12px;
+    text-transform: uppercase;
+}
+
+/* === TEAM CHIPS === */
+.team-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 3px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.team-chip:hover { border-color: var(--accent-blue); }
+.team-chip.selected { border-color: var(--accent-cyan); background: rgba(0,212,255,0.1); }
+.team-chip.locked { border-color: var(--star-5); background: rgba(224,86,253,0.1); cursor: default; }
+
+.team-chip .chip-rank {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* === EVENT LIST (Analyzer) === */
+.analyzer-event-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 80px 120px 80px 70px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(42,43,61,0.3);
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.analyzer-event-row:hover { background: rgba(74,125,255,0.06); }
+
+.analyzer-event-row.ai-recommended {
+    border-left: 3px solid var(--accent-cyan);
+}
+
+.ai-score-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 42px;
+    text-align: center;
+}
+
+.ai-score-badge.high { background: rgba(0,255,136,0.12); color: var(--accent-green); border: 1px solid rgba(0,255,136,0.3); }
+.ai-score-badge.mid { background: rgba(255,211,42,0.12); color: var(--accent-yellow); border: 1px solid rgba(255,211,42,0.3); }
+.ai-score-badge.low { background: rgba(255,140,66,0.12); color: var(--accent-orange); border: 1px solid rgba(255,140,66,0.3); }
+
+/* AI tip banner */
+.ai-tip {
+    background: rgba(0,212,255,0.06);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.ai-tip .ai-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.ai-tip strong { color: var(--accent-cyan); }
+
+/* Cooldown date display */
+.cooldown-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Step indicator */
+.step-indicator {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.step-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.step-dot.active { color: var(--accent-cyan); }
+.step-dot.done { color: var(--accent-green); }
+
+.step-dot .num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    border: 2px solid var(--border);
+    background: var(--bg-card);
+}
+
+.step-dot.active .num { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.step-dot.done .num { border-color: var(--accent-green); color: var(--accent-green); background: rgba(0,255,136,0.1); }
+
+.step-arrow { color: var(--text-muted); display: flex; align-items: center; font-size: 14px; }
+
+/* Number input */
+.number-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    width: 100px;
+    padding: 10px;
+    background: var(--bg-input);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--accent-cyan);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.number-input:focus { border-color: var(--accent-cyan); }
+
+/* Major stage selector */
+.major-stage {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.major-stage-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.stage-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    background: rgba(74,125,255,0.15);
+    color: var(--accent-blue);
+}
+
+.stage-title { font-weight: 700; font-size: 15px; }
+.stage-desc { font-size: 12px; color: var(--text-muted); }
+
+/* Major flow */
+.major-flow {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: 12px;
+}
+
+.major-flow .stage-col {
+    min-width: 260px;
+    flex-shrink: 0;
+}
+
+.flow-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--accent-cyan);
+    font-size: 24px;
+    padding-top: 40px;
+}
+
+/* Rules grid */
+.rules-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.rule-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.rule-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.rule-card.s1::before { background: var(--star-1); }
+.rule-card.s2::before { background: var(--star-2); }
+.rule-card.s3::before { background: var(--star-3); }
+.rule-card.s4::before { background: var(--star-4); }
+.rule-card.s5::before { background: linear-gradient(90deg, var(--star-5), var(--accent-cyan)); }
+
+.rule-stars { font-size: 20px; margin-bottom: 8px; }
+.rule-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* Event list items */
+.event-list-item {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 80px 120px 80px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(42,43,61,0.3);
+    transition: background 0.15s;
+    cursor: pointer;
+}
+
+.event-list-item:hover { background: rgba(74,125,255,0.04); }
+
+.event-idx {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.event-name-col { font-weight: 600; font-size: 14px; }
+
+/* History */
+.history-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(42,43,61,0.3);
+}
+
+.history-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 90px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-size: 14px; max-width: 400px; margin: 0 auto; line-height: 1.6; }
+
+/* Sim controls */
+.sim-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+/* Star participation mini-badges */
+.star-part {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+.star-part.never { color: var(--accent-green); background: rgba(0,255,136,0.08); }
+.star-part.recent { color: var(--text-muted); background: rgba(85,86,112,0.15); }
+.star-part.old { color: var(--accent-orange); background: rgba(255,140,66,0.08); }
+
+/* Rising team indicator */
+.rising-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(0,255,136,0.1);
+    color: var(--accent-green);
+    border: 1px solid rgba(0,255,136,0.2);
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1024px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .rules-grid { grid-template-columns: repeat(3, 1fr); }
+    .analyzer-event-row { grid-template-columns: 30px 1fr 70px 70px 100px 70px 60px; font-size: 12px; }
+}
+
+@media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .rules-grid { grid-template-columns: repeat(2, 1fr); }
+    .analyzer-event-row, .event-list-item { grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* Stagger animation */
+.stagger > * { opacity: 0; animation: staggerIn 0.4s forwards; }
+@keyframes staggerIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.3s; }
+
+/* Tooltip */
+.tooltip { position: relative; }
+.tooltip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 100%; left: 50%; transform: translateX(-50%);
+    padding: 4px 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+.tooltip:hover::after { opacity: 1; }
+
+/* Team search in modal */
+.team-search-modal {
+    padding: 8px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    width: 100%;
+    max-width: 300px;
+    transition: border-color 0.2s;
+    margin-bottom: 10px;
+}
+.team-search-modal:focus { border-color: var(--accent-cyan); }
+.team-search-modal::placeholder { color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">LOADING DATA</div>
+</div>
+
+<!-- Header -->
+<header class="header">
+    <div class="header-logo">CC2<span>COMMAND CENTER</span></div>
+    <nav class="nav-tabs">
+        <button class="nav-tab active" data-page="dashboard" onclick="switchPage('dashboard')">⬡ Dashboard</button>
+        <button class="nav-tab" data-page="analyzer" onclick="switchPage('analyzer')">◈ Analyzer</button>
+        <button class="nav-tab" data-page="ranking" onclick="switchPage('ranking')">▲ Ranking</button>
+        <button class="nav-tab" data-page="events" onclick="switchPage('events')">◆ Events</button>
+        <button class="nav-tab" data-page="rules" onclick="switchPage('rules')">⬢ Rules</button>
+        <button class="nav-tab" data-page="history" onclick="switchPage('history')">◉ History</button>
+    </nav>
+    <div class="header-status">
+        <div class="status-dot"></div>
+        <span id="teamCountHeader">0 Teams</span>
+    </div>
+</header>
+
+<!-- Main Content -->
+<div class="main">
+
+    <!-- ========== DASHBOARD ========== -->
+    <div class="page active" id="page-dashboard">
+        <div class="section-heading">⬡ Dashboard <span class="sub">OVERVIEW</span></div>
+        <div class="grid-4 stagger" id="dashStats"></div>
+        <div style="margin-top: 24px;" class="grid-2">
+            <div class="card">
+                <div class="card-title"><span class="icon">◈</span> TOP AI RECOMMENDATION</div>
+                <div id="dashTopRec">Loading...</div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="icon">▲</span> TOP 10 RANKING</div>
+                <div id="dashTop10"></div>
+            </div>
+        </div>
+        <div style="margin-top: 16px;" class="card">
+            <div class="card-title"><span class="icon">◆</span> EVENTS BY STAR DISTRIBUTION</div>
+            <div id="dashStarDist" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;"></div>
+        </div>
+    </div>
+
+    <!-- ========== ANALYZER ========== -->
+    <div class="page" id="page-analyzer">
+        <div class="section-heading">◈ Event Analyzer <span class="sub">CHOOSE & OPEN EVENTS</span></div>
+
+        <div class="analysis-panel">
+            <div class="analysis-title">🧠 AI — ANÁLISE INTELIGENTE</div>
+            <div class="analysis-subtitle">A AI analisa datas de última ocorrência, balanço regional, frequência de estrelas, participação dos times e streaks para recomendar eventos — mas a decisão final é sempre sua.</div>
+
+            <div class="sim-controls">
+                <label style="font-size:13px;color:var(--text-secondary);font-weight:600;">Simulation Date:</label>
+                <input type="date" id="simDate" class="search-input" style="width:170px;font-family:'JetBrains Mono',monospace;font-size:13px;">
+                <button class="btn btn-primary" onclick="runAnalysis()">▶ RUN ANALYSIS</button>
+                <button class="btn btn-secondary" onclick="advanceWeek()">⏩ +1 WEEK</button>
+                <button class="btn btn-secondary" onclick="advanceMonth()">⏩ +1 MONTH</button>
+            </div>
+
+            <div class="analysis-factors" id="analysisFactors"></div>
+        </div>
+
+        <!-- AI Tip -->
+        <div id="aiTipBanner"></div>
+
+        <!-- Filters for analyzer list -->
+        <div class="filters-bar">
+            <input type="text" class="search-input" placeholder="Search event..." id="analyzerSearch" oninput="renderAnalyzerList()">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="aregion" data-value="all" onclick="setAnalyzerFilter(this)">All</button>
+                <button class="filter-btn" data-filter="aregion" data-value="global" onclick="setAnalyzerFilter(this)">Global</button>
+                <button class="filter-btn" data-filter="aregion" data-value="america" onclick="setAnalyzerFilter(this)">Americas</button>
+                <button class="filter-btn" data-filter="aregion" data-value="europe" onclick="setAnalyzerFilter(this)">Europe</button>
+                <button class="filter-btn" data-filter="aregion" data-value="asia" onclick="setAnalyzerFilter(this)">Asia</button>
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="astar" data-value="all" onclick="setAnalyzerFilter(this)">All ★</button>
+                <button class="filter-btn" data-filter="astar" data-value="1" onclick="setAnalyzerFilter(this)">★1</button>
+                <button class="filter-btn" data-filter="astar" data-value="2" onclick="setAnalyzerFilter(this)">★2</button>
+                <button class="filter-btn" data-filter="astar" data-value="3" onclick="setAnalyzerFilter(this)">★3</button>
+                <button class="filter-btn" data-filter="astar" data-value="4" onclick="setAnalyzerFilter(this)">★4</button>
+                <button class="filter-btn" data-filter="astar" data-value="5" onclick="setAnalyzerFilter(this)">★5</button>
+            </div>
+        </div>
+
+        <!-- All events list -->
+        <div class="card" style="padding:0;overflow:hidden;">
+            <div id="analyzerListHeader" style="display:grid;grid-template-columns:40px 1fr 80px 80px 120px 80px 70px;padding:10px 16px;border-bottom:1px solid var(--border);">
+                <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">#</span>
+                <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">EVENT</span>
+                <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">STARS</span>
+                <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">REGION</span>
+                <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">LAST DATE</span>
+                <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">STATUS</span>
+                <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">AI</span>
+            </div>
+            <div id="analyzerListBody"></div>
+        </div>
+    </div>
+
+    <!-- ========== RANKING ========== -->
+    <div class="page" id="page-ranking">
+        <div class="section-heading">▲ Team Ranking <span class="sub" id="rankingCount">0 TEAMS</span></div>
+        <div class="filters-bar">
+            <input type="text" class="search-input" placeholder="Search team..." id="rankSearch" oninput="filterRanking()">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="region" data-value="all" onclick="setRankFilter(this)">All</button>
+                <button class="filter-btn" data-filter="region" data-value="AM" onclick="setRankFilter(this)">Americas</button>
+                <button class="filter-btn" data-filter="region" data-value="EU" onclick="setRankFilter(this)">Europe</button>
+                <button class="filter-btn" data-filter="region" data-value="AS" onclick="setRankFilter(this)">Asia</button>
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="tier" data-value="all" onclick="setRankFilter(this)">All Tiers</button>
+                <button class="filter-btn" data-filter="tier" data-value="Tier 1" onclick="setRankFilter(this)">T1</button>
+                <button class="filter-btn" data-filter="tier" data-value="Tier 2" onclick="setRankFilter(this)">T2</button>
+                <button class="filter-btn" data-filter="tier" data-value="Tier 3" onclick="setRankFilter(this)">T3</button>
+            </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+            <table class="data-table">
+                <thead><tr>
+                    <th style="width:50px">#</th><th>Team</th><th>Points</th><th>Tier</th><th>Region</th><th>W</th><th>L</th><th>Streak</th>
+                    <th style="text-align:center;">★4</th><th style="text-align:center;">★3</th><th style="text-align:center;">★2</th><th style="text-align:center;">★1</th>
+                </tr></thead>
+                <tbody id="rankingBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========== EVENTS ========== -->
+    <div class="page" id="page-events">
+        <div class="section-heading">◆ Event Database <span class="sub" id="eventCount">0 EVENTS</span></div>
+        <div class="filters-bar">
+            <input type="text" class="search-input" placeholder="Search event..." id="eventSearch" oninput="filterEvents()">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="eregion" data-value="all" onclick="setEventFilter(this)">All</button>
+                <button class="filter-btn" data-filter="eregion" data-value="global" onclick="setEventFilter(this)">Global</button>
+                <button class="filter-btn" data-filter="eregion" data-value="america" onclick="setEventFilter(this)">Americas</button>
+                <button class="filter-btn" data-filter="eregion" data-value="europe" onclick="setEventFilter(this)">Europe</button>
+                <button class="filter-btn" data-filter="eregion" data-value="asia" onclick="setEventFilter(this)">Asia</button>
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="estar" data-value="all" onclick="setEventFilter(this)">All ★</button>
+                <button class="filter-btn" data-filter="estar" data-value="1" onclick="setEventFilter(this)">★1</button>
+                <button class="filter-btn" data-filter="estar" data-value="2" onclick="setEventFilter(this)">★2</button>
+                <button class="filter-btn" data-filter="estar" data-value="3" onclick="setEventFilter(this)">★3</button>
+                <button class="filter-btn" data-filter="estar" data-value="4" onclick="setEventFilter(this)">★4</button>
+                <button class="filter-btn" data-filter="estar" data-value="5" onclick="setEventFilter(this)">★5</button>
+            </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+            <div id="eventListBody"></div>
+        </div>
+    </div>
+
+    <!-- ========== RULES ========== -->
+    <div class="page" id="page-rules">
+        <div class="section-heading">⬢ Invite Rules <span class="sub">RANK-RANGE SYSTEM</span></div>
+        <div class="rules-grid stagger" id="rulesGrid"></div>
+        <div class="card" style="margin-top:16px;">
+            <div class="card-title"><span class="icon">📋</span> DETAILED INVITE LOGIC</div>
+            <div id="rulesDetail"></div>
+        </div>
+        <div class="card" style="margin-top:16px;">
+            <div class="card-title"><span class="icon">🏆</span> MAJOR FORMAT (5 STARS - SWISS SYSTEM)</div>
+            <div id="majorRulesDetail"></div>
+        </div>
+    </div>
+
+    <!-- ========== HISTORY ========== -->
+    <div class="page" id="page-history">
+        <div class="section-heading">◉ Event History <span class="sub">OPENED EVENTS LOG</span></div>
+        <div style="display:flex;gap:12px;margin-bottom:20px;">
+            <button class="btn btn-secondary" onclick="clearHistory()">🗑 Clear History</button>
+            <button class="btn btn-secondary" onclick="exportHistory()">📥 Export Log</button>
+        </div>
+        <div class="card">
+            <div id="historyList">
+                <div class="empty-state">
+                    <div class="icon">◉</div>
+                    <p>No events opened yet. Use the Analyzer to open events and build your history.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="eventModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div id="modalContent"></div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+let teams = [];
+let events = [];
+let eventCooldowns = {};   // eventName -> ISO date string (from localStorage history)
+let eventHistory = [];
+let majorsThisYear = 0;
+let currentSimDate = new Date();
+let analysisScores = {};
+
+// Modal state for multi-step flow
+let modalState = {
+    event: null,
+    step: 1,
+    teamsCount: 0,
+    selectedTeams: [],
+    majorStage3: [],
+    inviteData: null
+};
+
+const regionMap = { 'AM': 'america', 'EU': 'europe', 'AS/SIS/ESEA': 'asia' };
+const regionMapReverse = {
+    'america': ['AM'],
+    'europe': ['EU'],
+    'asia': ['AS/SIS/ESEA'],
+    'global': ['AM', 'EU', 'AS/SIS/ESEA']
+};
+
+// ============================================================
+// GLOBAL INVITE RANK RANGES (for ~164 global teams)
+// ============================================================
+const GLOBAL_INVITE_RANGES = {
+    4: { min: 1, max: 35 },
+    3: { min: 15, max: 80 },
+    2: { min: 50, max: 160 },
+    1: { min: 100, max: 160 }
+};
+const GLOBAL_TOTAL_REFERENCE = 164; // reference global team count
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+async function loadData() {
+    try {
+        const [rankRes, evtRes] = await Promise.all([
+            fetch('file/ranking.xlsx'),
+            fetch('file/events.xlsx')
+        ]);
+
+        if (!rankRes.ok || !evtRes.ok) throw new Error('Failed to fetch files');
+
+        const rankBuf = await rankRes.arrayBuffer();
+        const evtBuf = await evtRes.arrayBuffer();
+
+        const rankWb = XLSX.read(rankBuf, { type: 'array' });
+        const evtWb = XLSX.read(evtBuf, { type: 'array' });
+
+        const rankSheet = rankWb.Sheets[rankWb.SheetNames[0]];
+        const evtSheet = evtWb.Sheets[evtWb.SheetNames[0]];
+
+        const rankJson = XLSX.utils.sheet_to_json(rankSheet);
+        const evtJson = XLSX.utils.sheet_to_json(evtSheet);
+
+        // Parse teams with new star participation columns
+        teams = rankJson.map((r, i) => ({
+            rank: i + 1,
+            name: r.Team || r.team || '',
+            points: parseFloat(r.Points || r.points || 0),
+            tier: r.Tier || r.tier || 'Tier 3',
+            region: r.Region || r.region || '',
+            victories: parseInt(r.Victories || r.victories || 0),
+            losses: parseInt(r.Loses || r.loses || 0),
+            streak: parseInt(r.Streak || r.streak || 0),
+            majors: parseInt(r.Majors || r.majors || 0),
+            prestige: parseInt(r.Prestige || r.prestige || 0),
+            // Star participation: last date the team played in each star-tier event
+            starPart: {
+                4: parseExcelDate(r['4 star']),
+                3: parseExcelDate(r['3 star']),
+                2: parseExcelDate(r['2 star']),
+                1: parseExcelDate(r['1 star'])
+            }
+        })).sort((a, b) => b.points - a.points);
+
+        teams.forEach((t, i) => t.rank = i + 1);
+
+        // Parse events: "last date" replaces cooldown
+        events = evtJson.map(e => ({
+            name: e.name || '',
+            region: (e.region || 'global').toLowerCase(),
+            stars: parseInt(e.stars || 1),
+            lastDate: parseExcelDate(e['last date']),  // from Excel
+            format: e.format || 'bracket',
+            type: (e.type || 'global').toLowerCase()
+        }));
+
+        loadState();
+        document.getElementById('simDate').value = formatDateInput(currentSimDate);
+
+        renderDashboard();
+        renderRanking();
+        renderEventList();
+        renderRules();
+        renderHistory();
+        runAnalysis();
+
+        document.getElementById('teamCountHeader').textContent = `${teams.length} Teams`;
+
+        setTimeout(() => {
+            document.getElementById('loading').classList.add('hidden');
+        }, 600);
+
+    } catch (err) {
+        console.error('Load error:', err);
+        document.getElementById('loading').innerHTML = `
+            <div style="text-align:center;color:var(--accent-red);">
+                <div style="font-size:48px;margin-bottom:16px;">⚠</div>
+                <div style="font-family:'Orbitron';font-size:14px;letter-spacing:2px;margin-bottom:12px;">DATA LOAD ERROR</div>
+                <div style="font-size:13px;color:var(--text-secondary);max-width:500px;line-height:1.6;">
+                    Could not load Excel files. Make sure <strong>ranking.xlsx</strong> and <strong>events.xlsx</strong>
+                    are served at <code>/file/</code> path.<br><br>Error: ${err.message}
+                </div>
+            </div>`;
+    }
+}
+
+function parseExcelDate(val) {
+    if (!val) return null;
+    if (typeof val === 'number') {
+        // Excel serial date
+        const epoch = new Date(1899, 11, 30);
+        return new Date(epoch.getTime() + val * 86400000).toISOString();
+    }
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function loadState() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('cc2_state'));
+        if (saved) {
+            eventCooldowns = saved.eventCooldowns || {};
+            eventHistory = saved.eventHistory || [];
+            majorsThisYear = saved.majorsThisYear || 0;
+            if (saved.currentSimDate) currentSimDate = new Date(saved.currentSimDate);
+            // Restore team star participation updates from localStorage
+            if (saved.teamStarPart) {
+                for (const teamName in saved.teamStarPart) {
+                    const team = teams.find(t => t.name === teamName);
+                    if (team) {
+                        for (const star in saved.teamStarPart[teamName]) {
+                            const savedDate = saved.teamStarPart[teamName][star];
+                            const excelDate = team.starPart[star];
+                            // Use whichever is more recent
+                            if (savedDate && (!excelDate || new Date(savedDate) > new Date(excelDate))) {
+                                team.starPart[star] = savedDate;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch(e) {}
+}
+
+function saveState() {
+    // Collect team star participation for persistence
+    const teamStarPart = {};
+    teams.forEach(t => {
+        const hasDates = Object.values(t.starPart).some(v => v);
+        if (hasDates) {
+            teamStarPart[t.name] = { ...t.starPart };
+        }
+    });
+    localStorage.setItem('cc2_state', JSON.stringify({
+        eventCooldowns, eventHistory, majorsThisYear,
+        currentSimDate: currentSimDate.toISOString(),
+        teamStarPart
+    }));
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function switchPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.querySelector(`.nav-tab[data-page="${page}"]`).classList.add('active');
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function starBadge(n) { return `<span class="star-badge s${n}">★${n}</span>`; }
+
+function tierBadge(tier) {
+    const num = tier.replace(/\D/g, '') || '3';
+    return `<span class="tier-badge t${num}">${tier}</span>`;
+}
+
+function regionBadge(region) {
+    const r = region.toLowerCase();
+    let cls = 'global', label = region;
+    if (r.includes('am')) { cls = 'america'; label = 'AM'; }
+    else if (r.includes('eu')) { cls = 'europe'; label = 'EU'; }
+    else if (r.includes('as') || r.includes('sis')) { cls = 'asia'; label = 'AS'; }
+    else if (r === 'global') { label = 'GLOBAL'; }
+    else if (r === 'america') { cls = 'america'; label = 'AM'; }
+    else if (r === 'europe') { cls = 'europe'; label = 'EU'; }
+    else if (r === 'asia') { cls = 'asia'; label = 'AS'; }
+    return `<span class="region-badge ${cls}">${label}</span>`;
+}
+
+function formatDateInput(d) { return d.toISOString().split('T')[0]; }
+
+function formatDateDisplay(d) {
+    if (typeof d === 'string') d = new Date(d);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function daysBetween(d1, d2) { return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)); }
+
+function shuffleArray(arr) {
+    const copy = [...arr];
+    const seed = currentSimDate.getTime();
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.abs((seed * (i + 1) * 9301 + 49297) % 233280) % (i + 1);
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
+// Format star participation date for display
+function starPartBadge(dateStr) {
+    if (!dateStr) return '<span class="star-part never">NEVER</span>';
+    const days = daysBetween(new Date(dateStr), currentSimDate);
+    if (days < 0) return '<span class="star-part never">NEVER</span>';
+    if (days <= 45) return `<span class="star-part recent">${days}d</span>`;
+    return `<span class="star-part old">${days}d</span>`;
+}
+
+// ============================================================
+// INVITE SYSTEM - Rank-Range Based with Participation Priority
+// ============================================================
+function getInviteRankRange(stars, eventRegion) {
+    if (stars === 5) return null; // Major handled separately
+
+    const globalRange = GLOBAL_INVITE_RANGES[stars];
+    if (!globalRange) return { min: 1, max: 160 };
+
+    if (eventRegion === 'global') {
+        return { ...globalRange };
+    }
+
+    // For regional events, scale the range proportionally
+    const regionCodes = regionMapReverse[eventRegion] || [];
+    const regionalTeamCount = teams.filter(t =>
+        regionCodes.some(rc => t.region.includes(rc.split('/')[0]) || t.region === rc)
+    ).length;
+
+    if (regionalTeamCount === 0) return { ...globalRange };
+
+    const ratio = regionalTeamCount / GLOBAL_TOTAL_REFERENCE;
+    return {
+        min: Math.max(1, Math.round(globalRange.min * ratio)),
+        max: Math.max(Math.round(globalRange.max * ratio), regionalTeamCount)
+    };
+}
+
+function getInvitedTeams(event, teamsCount) {
+    const { stars, region } = event;
+
+    // Get eligible teams
+    let eligible = [...teams];
+    if (region !== 'global') {
+        const regionCodes = regionMapReverse[region] || [];
+        eligible = teams.filter(t => regionCodes.some(rc => t.region.includes(rc.split('/')[0]) || t.region === rc));
+    }
+
+    // Sort by points (rank order)
+    eligible.sort((a, b) => b.points - a.points);
+    // Assign local rank
+    eligible.forEach((t, i) => t._localRank = i + 1);
+
+    if (stars === 5) return null; // Major handled separately
+
+    const range = getInviteRankRange(stars, region);
+
+    // Filter to rank range
+    let pool = eligible.filter(t => t._localRank >= range.min && t._localRank <= range.max);
+
+    // For 1★ events: also include truly new/unranked teams at bottom
+    if (stars === 1) {
+        const bottomTeams = eligible.filter(t => t._localRank > range.max);
+        pool = [...pool, ...bottomTeams];
+    }
+
+    // Score each team in pool for invite priority
+    const starKey = stars;
+    const scored = pool.map(t => {
+        let priority = 0;
+
+        // 1) Star participation: how long since they last played this star tier
+        const lastPlayed = t.starPart[starKey];
+        if (!lastPlayed) {
+            priority += 50; // Never played this tier — highest priority
+        } else {
+            const daysSince = daysBetween(new Date(lastPlayed), currentSimDate);
+            priority += Math.min(daysSince * 0.5, 40); // More days = more priority
+        }
+
+        // 2) Streak bonus: rising teams get a boost
+        if (t.streak >= 5) {
+            priority += 15;
+        } else if (t.streak >= 3) {
+            priority += 8;
+        } else if (t.streak >= 2) {
+            priority += 3;
+        }
+
+        // 3) Rank-based weighting: slight preference for appropriate rank position
+        const rankPosition = (t._localRank - range.min) / Math.max(1, range.max - range.min);
+        // For higher-star events, prefer teams closer to the top of the range
+        if (stars >= 3) {
+            priority += (1 - rankPosition) * 10; // top of range gets bonus
+        } else {
+            // For lower-star events, more balanced
+            priority += 5;
+        }
+
+        // 4) Small randomness for variety (seeded by date)
+        const seed = (currentSimDate.getTime() + t.name.charCodeAt(0) * 127) % 100;
+        priority += seed * 0.05;
+
+        return { team: t, priority };
+    });
+
+    // Sort by priority (highest first), take teamsCount
+    scored.sort((a, b) => b.priority - a.priority);
+    let invited = scored.slice(0, teamsCount).map(s => s.team);
+
+    // Sort final list by rank for display
+    invited.sort((a, b) => b.points - a.points);
+    return { teams: invited, stages: null, range };
+}
+
+function getMajorTeams(stage3UserTeams) {
+    const allSorted = [...teams].sort((a, b) => b.points - a.points);
+    const stage3 = stage3UserTeams.map(name => teams.find(t => t.name === name)).filter(Boolean);
+    const remaining = allSorted.filter(t => !stage3.some(s3 => s3.name === t.name));
+    const stage2 = remaining.slice(0, 8);
+    const stage1 = remaining.slice(8, 24);
+
+    return {
+        teams: [...stage3, ...stage2, ...stage1],
+        stages: {
+            stage1: { name: 'Challengers Stage', desc: `${stage1.length} rising teams fighting for a spot`, teams: stage1 },
+            stage2: { name: 'Legends Stage', desc: 'Top 8 current teams (auto-selected)', teams: stage2 },
+            stage3: { name: 'Champions Stage (Playoffs)', desc: `${stage3.length} teams selected by you`, teams: stage3 }
+        }
+    };
+}
+
+// ============================================================
+// GET EFFECTIVE LAST DATE for an event
+// (prefers Excel "last date", falls back to localStorage cooldown)
+// ============================================================
+function getEventLastDate(evt) {
+    const excelDate = evt.lastDate;
+    const lsDate = eventCooldowns[evt.name];
+    if (excelDate && lsDate) {
+        return new Date(excelDate) > new Date(lsDate) ? excelDate : lsDate;
+    }
+    return excelDate || lsDate || null;
+}
+
+// ============================================================
+// ANALYSIS ENGINE
+// ============================================================
+function runAnalysis() {
+    currentSimDate = new Date(document.getElementById('simDate').value || Date.now());
+    const simDate = currentSimDate;
+    const currentYear = simDate.getFullYear();
+
+    majorsThisYear = eventHistory.filter(h => {
+        const hDate = new Date(h.date);
+        return hDate.getFullYear() === currentYear && h.stars === 5;
+    }).length;
+
+    // Expected intervals between events by star level (in days)
+    const expectedIntervals = { 1: 21, 2: 40, 3: 60, 4: 80, 5: 180 };
+
+    analysisScores = {};
+    events.forEach(evt => {
+        let score = 0;
+
+        // Base score by star frequency (lower stars happen more often)
+        const starFrequency = { 1: 30, 2: 25, 3: 20, 4: 15, 5: 10 };
+        score += starFrequency[evt.stars] || 10;
+
+        // Use effective last date (Excel or localStorage)
+        const lastDate = getEventLastDate(evt);
+        if (lastDate) {
+            const daysSince = daysBetween(new Date(lastDate), simDate);
+            const expected = expectedIntervals[evt.stars] || 30;
+            const overdue = daysSince - expected;
+            if (overdue >= 0) {
+                // Overdue: strongly recommend
+                score += Math.min(overdue * 0.6, 25);
+            } else {
+                // Too recent: penalize
+                score -= 15;
+            }
+            // Extra bonus if very overdue (hasn't happened in a long time)
+            if (daysSince > expected * 2) {
+                score += 10;
+            }
+        } else {
+            score += 15; // Never opened bonus
+        }
+
+        // Regional balance
+        const recentRegionEvents = eventHistory.filter(h => {
+            const hDate = new Date(h.date);
+            return daysBetween(hDate, simDate) <= 60 && h.region === evt.region;
+        }).length;
+        score -= recentRegionEvents * 3;
+
+        // Star balance
+        const recentStarEvents = eventHistory.filter(h => {
+            const hDate = new Date(h.date);
+            return daysBetween(hDate, simDate) <= 45 && h.stars === evt.stars;
+        }).length;
+        score -= recentStarEvents * 2;
+
+        // Major specific
+        if (evt.stars === 5) {
+            if (majorsThisYear >= 2) {
+                score -= 30;
+            }
+            const lastMajor = eventHistory.filter(h => h.stars === 5).sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+            if (lastMajor) {
+                const monthsSince = daysBetween(new Date(lastMajor.date), simDate) / 30;
+                if (monthsSince >= 5) score += 25;
+            } else {
+                score += 20;
+            }
+        }
+
+        analysisScores[evt.name] = Math.round(score);
+    });
+
+    // Render factors
+    const overdueCount = events.filter(evt => {
+        const lastDate = getEventLastDate(evt);
+        if (!lastDate) return true; // never opened = should be opened
+        const daysSince = daysBetween(new Date(lastDate), simDate);
+        return daysSince > (expectedIntervals[evt.stars] || 30);
+    }).length;
+
+    const factorsHtml = `
+        <div class="factor-item">
+            <div class="factor-label">Total Events</div>
+            <div class="factor-value" style="color:var(--accent-cyan)">${events.length}</div>
+        </div>
+        <div class="factor-item">
+            <div class="factor-label">Overdue / Never Run</div>
+            <div class="factor-value" style="color:var(--accent-orange)">${overdueCount}</div>
+        </div>
+        <div class="factor-item">
+            <div class="factor-label">Majors This Year</div>
+            <div class="factor-value" style="color:var(--star-5)">${majorsThisYear}/2</div>
+        </div>
+        <div class="factor-item">
+            <div class="factor-label">Events Opened Total</div>
+            <div class="factor-value" style="color:var(--accent-green)">${eventHistory.length}</div>
+        </div>
+        <div class="factor-item">
+            <div class="factor-label">Sim Date</div>
+            <div class="factor-value" style="color:var(--text-primary);font-size:13px;">${formatDateDisplay(simDate)}</div>
+        </div>
+    `;
+    document.getElementById('analysisFactors').innerHTML = factorsHtml;
+
+    generateAITip();
+    renderAnalyzerList();
+    renderDashboard();
+    saveState();
+}
+
+function generateAITip() {
+    const simDate = currentSimDate;
+    const tips = [];
+    const expectedIntervals = { 1: 21, 2: 40, 3: 60, 4: 80, 5: 180 };
+
+    // Find top recommended
+    const sorted = events.map(e => ({ event: e, score: analysisScores[e.name] || 0 })).sort((a, b) => b.score - a.score);
+    const top = sorted[0];
+    if (top && top.score > 0) {
+        tips.push(`<strong>Recomendação principal:</strong> "${top.event.name}" (★${top.event.stars}, score ${top.score})`);
+    }
+
+    // Check for very overdue events
+    const veryOverdue = events.filter(evt => {
+        const lastDate = getEventLastDate(evt);
+        if (!lastDate) return false;
+        const daysSince = daysBetween(new Date(lastDate), simDate);
+        return daysSince > (expectedIntervals[evt.stars] || 30) * 2.5;
+    });
+    if (veryOverdue.length > 0) {
+        const names = veryOverdue.slice(0, 3).map(e => `"${e.name}" (★${e.stars})`).join(', ');
+        tips.push(`<strong>⚠ Muito tempo sem ocorrer:</strong> ${names}${veryOverdue.length > 3 ? ` e mais ${veryOverdue.length - 3}` : ''}`);
+    }
+
+    // Major status
+    if (majorsThisYear >= 2) {
+        tips.push(`<strong>⚠ Aviso:</strong> Já foram abertos 2 Majors este ano. Abrir outro não é recomendado, mas a decisão é sua.`);
+    } else if (majorsThisYear === 1) {
+        tips.push(`<strong>Major:</strong> 1/2 Majors usados este ano. Ainda pode abrir mais 1.`);
+    }
+
+    // Region balance
+    const regionCounts = {};
+    eventHistory.filter(h => daysBetween(new Date(h.date), simDate) <= 60).forEach(h => {
+        regionCounts[h.region] = (regionCounts[h.region] || 0) + 1;
+    });
+    const underserved = ['global', 'america', 'europe', 'asia'].filter(r => !regionCounts[r] || regionCounts[r] === 0);
+    if (underserved.length > 0) {
+        tips.push(`<strong>Balanço regional:</strong> Nenhum evento recente para: ${underserved.map(r => r.toUpperCase()).join(', ')}`);
+    }
+
+    // Rising teams tip
+    const risingTeams = teams.filter(t => t.streak >= 5).slice(0, 5);
+    if (risingTeams.length > 0) {
+        tips.push(`<strong>🔥 Times em ascensão:</strong> ${risingTeams.map(t => `${t.name} (W${t.streak})`).join(', ')}`);
+    }
+
+    const html = tips.map(t => `<div class="ai-tip"><span class="ai-icon">🧠</span><div>${t}</div></div>`).join('');
+    document.getElementById('aiTipBanner').innerHTML = html;
+}
+
+function advanceWeek() {
+    currentSimDate = new Date(currentSimDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    document.getElementById('simDate').value = formatDateInput(currentSimDate);
+    saveState();
+    runAnalysis();
+}
+
+function advanceMonth() {
+    currentSimDate = new Date(currentSimDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    document.getElementById('simDate').value = formatDateInput(currentSimDate);
+    saveState();
+    runAnalysis();
+}
+
+// ============================================================
+// ANALYZER LIST
+// ============================================================
+let analyzerFilters = { aregion: 'all', astar: 'all' };
+
+function setAnalyzerFilter(btn) {
+    const filter = btn.dataset.filter;
+    const value = btn.dataset.value;
+    analyzerFilters[filter] = value;
+    document.querySelectorAll(`.filter-btn[data-filter="${filter}"]`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAnalyzerList();
+}
+
+function renderAnalyzerList() {
+    const search = (document.getElementById('analyzerSearch')?.value || '').toLowerCase();
+    let filtered = events.filter(e => {
+        if (search && !e.name.toLowerCase().includes(search)) return false;
+        if (analyzerFilters.aregion !== 'all' && e.region !== analyzerFilters.aregion) return false;
+        if (analyzerFilters.astar !== 'all' && e.stars !== parseInt(analyzerFilters.astar)) return false;
+        return true;
+    });
+
+    filtered.sort((a, b) => (analysisScores[b.name] || 0) - (analysisScores[a.name] || 0));
+
+    const expectedIntervals = { 1: 21, 2: 40, 3: 60, 4: 80, 5: 180 };
+
+    let html = '';
+    filtered.forEach((e, i) => {
+        const score = analysisScores[e.name] || 0;
+        const scoreClass = score >= 35 ? 'high' : score >= 20 ? 'mid' : 'low';
+        const isRecommended = score >= 35;
+
+        const lastDate = getEventLastDate(e);
+        let lastDateStr = '<span style="color:var(--text-muted);font-size:11px;">Never</span>';
+        let statusStr = '';
+
+        if (lastDate) {
+            lastDateStr = `<span class="cooldown-date">${formatDateDisplay(lastDate)}</span>`;
+            const daysSince = daysBetween(new Date(lastDate), currentSimDate);
+            const expected = expectedIntervals[e.stars] || 30;
+            if (daysSince > expected) {
+                const overdueDays = daysSince - expected;
+                statusStr = `<span style="font-size:11px;font-weight:700;color:var(--accent-green);">+${overdueDays}d OVERDUE</span>`;
+            } else {
+                const remaining = expected - daysSince;
+                statusStr = `<span style="font-size:11px;font-weight:700;color:var(--accent-orange);">${remaining}d</span>`;
+            }
+        } else {
+            statusStr = `<span style="font-size:11px;font-weight:700;color:var(--accent-green);">NEW</span>`;
+        }
+
+        html += `<div class="analyzer-event-row ${isRecommended ? 'ai-recommended' : ''}" onclick="openEventSetup('${e.name.replace(/'/g, "\\'")}')">
+            <span class="event-idx">${i + 1}</span>
+            <span class="event-name-col">${e.name}</span>
+            <span>${starBadge(e.stars)}</span>
+            <span>${regionBadge(e.region)}</span>
+            <span>${lastDateStr}</span>
+            <span>${statusStr}</span>
+            <span><span class="ai-score-badge ${scoreClass}">${score}</span></span>
+        </div>`;
+    });
+
+    if (filtered.length === 0) {
+        html = '<div class="empty-state"><div class="icon">◈</div><p>No events match your filters.</p></div>';
+    }
+
+    document.getElementById('analyzerListBody').innerHTML = html;
+}
+
+// ============================================================
+// EVENT SETUP MODAL
+// ============================================================
+function openEventSetup(eventName) {
+    const evt = events.find(e => e.name === eventName);
+    if (!evt) return;
+
+    modalState = {
+        event: evt,
+        step: 1,
+        teamsCount: 0,
+        selectedTeams: [],
+        majorStage3: [],
+        inviteData: null
+    };
+
+    if (evt.stars === 5) {
+        renderMajorStep1();
+    } else {
+        renderTeamCountStep();
+    }
+
+    document.getElementById('eventModal').classList.add('show');
+}
+
+function renderStepIndicator(steps, currentStep) {
+    let html = '<div class="step-indicator">';
+    steps.forEach((label, i) => {
+        const stepNum = i + 1;
+        const cls = stepNum === currentStep ? 'active' : stepNum < currentStep ? 'done' : '';
+        html += `<div class="step-dot ${cls}"><span class="num">${stepNum < currentStep ? '✓' : stepNum}</span>${label}</div>`;
+        if (i < steps.length - 1) html += '<span class="step-arrow">→</span>';
+    });
+    html += '</div>';
+    return html;
+}
+
+// --- REGULAR EVENT: Step 1 - Team Count ---
+function renderTeamCountStep() {
+    const evt = modalState.event;
+    const lastDate = getEventLastDate(evt);
+    const expectedIntervals = { 1: 21, 2: 40, 3: 60, 4: 80, 5: 180 };
+    let warning = '';
+
+    if (lastDate) {
+        const daysSince = daysBetween(new Date(lastDate), currentSimDate);
+        const expected = expectedIntervals[evt.stars] || 30;
+        if (daysSince < expected) {
+            const remaining = expected - daysSince;
+            warning = `<div class="ai-tip" style="margin-top:16px;">
+                <span class="ai-icon">⚠️</span>
+                <div><strong>Evento recente:</strong> Este evento ocorreu por último em ${formatDateDisplay(lastDate)} (${daysSince} dias atrás). O intervalo sugerido é de ${expected} dias. Faltam ${remaining} dias. Você pode abrir mesmo assim — a AI apenas recomenda esperar.</div>
+            </div>`;
+        } else {
+            const overdue = daysSince - expected;
+            warning = `<div class="ai-tip" style="margin-top:16px;">
+                <span class="ai-icon">✅</span>
+                <div><strong>Pronto para ocorrer!</strong> Último: ${formatDateDisplay(lastDate)} (${daysSince} dias atrás, +${overdue}d além do esperado).</div>
+            </div>`;
+        }
+    }
+
+    const range = getInviteRankRange(evt.stars, evt.region);
+    const suggestedCounts = { 1: 8, 2: 10, 3: 14, 4: 16, 5: 24 };
+    const suggested = suggestedCounts[evt.stars] || 8;
+
+    const html = `
+        ${renderStepIndicator(['Qty Teams', 'Review Teams', 'Confirm'], 1)}
+        <h2>${evt.name}</h2>
+        <div style="display:flex;gap:8px;margin:12px 0;">${starBadge(evt.stars)} ${regionBadge(evt.region)}</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">
+            Format: <strong>${evt.format.toUpperCase()}</strong>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+            Rank range: <span style="color:var(--accent-cyan);font-weight:700;">#${range.min} – #${range.max}</span>
+            ${evt.region !== 'global' ? ' (adapted for regional)' : ' (global)'}
+        </div>
+        ${warning}
+
+        <h3>👥 Quantos times serão convidados?</h3>
+        <div style="display:flex;align-items:center;gap:16px;margin:16px 0;">
+            <input type="number" class="number-input" id="teamCountInput" value="${suggested}" min="2" max="64" onkeydown="if(event.key==='Enter')proceedToReview()">
+            <div>
+                <div style="font-size:12px;color:var(--text-muted);">Sugestão AI: <span style="color:var(--accent-cyan);font-weight:700;">${suggested} times</span></div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Baseado no nível ★${evt.stars} · Pool: ranks #${range.min}–#${range.max}</div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px;">
+            <button class="btn btn-primary" onclick="proceedToReview()">Próximo →</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    `;
+
+    document.getElementById('modalContent').innerHTML = html;
+}
+
+function proceedToReview() {
+    const count = parseInt(document.getElementById('teamCountInput').value);
+    if (!count || count < 2) { alert('Insira um número válido (mín. 2)'); return; }
+
+    modalState.teamsCount = count;
+    modalState.inviteData = getInvitedTeams(modalState.event, count);
+    modalState.step = 2;
+
+    renderReviewStep();
+}
+
+// --- REGULAR EVENT: Step 2 - Review Teams ---
+function renderReviewStep() {
+    const evt = modalState.event;
+    const inviteData = modalState.inviteData;
+
+    // Count rising teams
+    const risingCount = inviteData.teams.filter(t => t.streak >= 3).length;
+
+    let html = `
+        ${renderStepIndicator(['Qty Teams', 'Review Teams', 'Confirm'], 2)}
+        <h2>${evt.name}</h2>
+        <div style="display:flex;gap:8px;margin:12px 0;">${starBadge(evt.stars)} ${regionBadge(evt.region)}</div>
+
+        <div class="ai-tip">
+            <span class="ai-icon">🧠</span>
+            <div>A AI selecionou <strong>${inviteData.teams.length} times</strong> do pool ranks <strong>#${inviteData.range.min}–#${inviteData.range.max}</strong> para ★${evt.stars}.
+            ${risingCount > 0 ? `<br>🔥 <strong>${risingCount} time(s) em ascensão</strong> (streak ≥ 3 vitórias) incluídos.` : ''}
+            <br>Prioridade dada a times que <strong>não participaram recentemente</strong> de eventos ★${evt.stars}.</div>
+        </div>
+
+        <h3>👥 Times Convidados (${inviteData.teams.length})</h3>
+        <table class="data-table"><thead><tr>
+            <th>#</th><th>Team</th><th>Points</th><th>Tier</th><th>Region</th><th>Streak</th><th>Last ★${evt.stars}</th>
+        </tr></thead><tbody>`;
+
+    inviteData.teams.forEach(t => {
+        const lastPlayed = t.starPart[evt.stars];
+        const lastStr = lastPlayed ? formatDateDisplay(lastPlayed) : '<span style="color:var(--accent-green);">Never</span>';
+        const isRising = t.streak >= 3;
+        html += `<tr>
+            <td><span class="rank-num ${t.rank <= 3 ? 'top3' : t.rank <= 10 ? 'top10' : ''}">${t.rank}</span></td>
+            <td class="team-name">${t.name} ${isRising ? '<span class="rising-badge">🔥 W' + t.streak + '</span>' : ''}</td>
+            <td class="points-val">${t.points.toFixed(1)}</td>
+            <td>${tierBadge(t.tier)}</td>
+            <td>${regionBadge(t.region)}</td>
+            <td style="font-family:'JetBrains Mono';font-size:12px;color:${t.streak > 0 ? 'var(--accent-green)' : 'var(--text-muted)'};">${t.streak > 0 ? 'W' + t.streak : '—'}</td>
+            <td style="font-size:11px;">${lastStr}</td>
+        </tr>`;
+    });
+
+    html += `</tbody></table>
+        <div style="display:flex;gap:12px;margin-top:24px;">
+            <button class="btn btn-confirm" onclick="confirmOpenEvent()">✓ OPEN THIS EVENT</button>
+            <button class="btn btn-secondary" onclick="renderTeamCountStep()">← Back</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    `;
+
+    document.getElementById('modalContent').innerHTML = html;
+}
+
+// ============================================================
+// MAJOR EVENT - Special Multi-step
+// ============================================================
+function renderMajorStep1() {
+    const evt = modalState.event;
+    const lastDate = getEventLastDate(evt);
+    let warnings = '';
+
+    if (lastDate) {
+        const daysSince = daysBetween(new Date(lastDate), currentSimDate);
+        if (daysSince < 180) {
+            warnings += `<div class="ai-tip" style="margin-top:12px;">
+                <span class="ai-icon">⚠️</span>
+                <div><strong>Evento recente:</strong> Último em ${formatDateDisplay(lastDate)} (${daysSince} dias atrás). Intervalo sugerido: 180 dias.</div>
+            </div>`;
+        }
+    }
+
+    if (majorsThisYear >= 2) {
+        warnings += `<div class="ai-tip" style="margin-top:12px;">
+            <span class="ai-icon">⚠️</span>
+            <div><strong>Limite anual:</strong> Já foram abertos ${majorsThisYear} Majors este ano. A AI recomenda no máximo 2, mas a decisão é sua.</div>
+        </div>`;
+    }
+
+    const allSorted = [...teams].sort((a, b) => b.points - a.points);
+
+    const html = `
+        ${renderStepIndicator(['Stage 3 (Playoffs)', 'Review Stages', 'Confirm'], 1)}
+        <h2>🏆 ${evt.name}</h2>
+        <div style="display:flex;gap:8px;margin:12px 0;">${starBadge(5)} ${regionBadge('global')}</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">
+            <strong>MAJOR</strong> · Swiss System · 3 Stages
+        </div>
+        ${warnings}
+
+        <h3>STAGE 3 — Champions (Playoffs)</h3>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;line-height:1.6;">
+            Selecione os times que participarão do <strong>Stage 3 (Playoffs)</strong>. Apenas você sabe quais times se classificaram.
+            Após isso, o sistema irá preencher automaticamente o <strong>Stage 2</strong> (top 8 do ranking) e o <strong>Stage 1</strong> (próximos 16 melhores).
+        </div>
+
+        <div style="margin-bottom:8px;font-size:12px;color:var(--accent-cyan);font-weight:600;">
+            Selecionados: <span id="majorStage3Count">0</span> times
+        </div>
+
+        <input type="text" class="team-search-modal" placeholder="Buscar time..." id="majorTeamSearch" oninput="filterMajorTeams()">
+
+        <div id="majorTeamGrid" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">
+            ${allSorted.map(t => `
+                <div class="team-chip" data-team="${t.name}" onclick="toggleMajorTeam(this, '${t.name.replace(/'/g, "\\'")}')">
+                    <span class="chip-rank">#${t.rank}</span>
+                    ${t.name}
+                    ${tierBadge(t.tier)}
+                    ${t.streak >= 3 ? '<span class="rising-badge">🔥W' + t.streak + '</span>' : ''}
+                </div>
+            `).join('')}
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px;">
+            <button class="btn btn-primary" onclick="proceedMajorReview()">Próximo →</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    `;
+
+    document.getElementById('modalContent').innerHTML = html;
+    modalState.majorStage3 = [];
+}
+
+function toggleMajorTeam(el, teamName) {
+    const idx = modalState.majorStage3.indexOf(teamName);
+    if (idx >= 0) {
+        modalState.majorStage3.splice(idx, 1);
+        el.classList.remove('selected');
+    } else {
+        modalState.majorStage3.push(teamName);
+        el.classList.add('selected');
+    }
+    document.getElementById('majorStage3Count').textContent = modalState.majorStage3.length;
+}
+
+function filterMajorTeams() {
+    const search = (document.getElementById('majorTeamSearch')?.value || '').toLowerCase();
+    document.querySelectorAll('#majorTeamGrid .team-chip').forEach(chip => {
+        const name = chip.dataset.team.toLowerCase();
+        chip.style.display = name.includes(search) ? '' : 'none';
+    });
+}
+
+function proceedMajorReview() {
+    if (modalState.majorStage3.length === 0) {
+        alert('Selecione pelo menos 1 time para o Stage 3 (Playoffs).');
+        return;
+    }
+
+    modalState.inviteData = getMajorTeams(modalState.majorStage3);
+    modalState.step = 2;
+    renderMajorReviewStep();
+}
+
+function renderMajorReviewStep() {
+    const evt = modalState.event;
+    const data = modalState.inviteData;
+
+    let html = `
+        ${renderStepIndicator(['Stage 3 (Playoffs)', 'Review Stages', 'Confirm'], 2)}
+        <h2>🏆 ${evt.name}</h2>
+        <div style="display:flex;gap:8px;margin:12px 0;">${starBadge(5)} ${regionBadge('global')}</div>
+
+        <div class="ai-tip">
+            <span class="ai-icon">🧠</span>
+            <div>
+                <strong>Stage 3 (Playoffs):</strong> ${data.stages.stage3.teams.length} times selecionados por você<br>
+                <strong>Stage 2 (Legends):</strong> ${data.stages.stage2.teams.length} melhores times do ranking (auto)<br>
+                <strong>Stage 1 (Challengers):</strong> ${data.stages.stage1.teams.length} próximos melhores (auto)<br>
+                <strong>Total: ${data.teams.length} times</strong>
+            </div>
+        </div>
+
+        <div class="major-flow">
+    `;
+
+    const stageOrder = ['stage3', 'stage2', 'stage1'];
+    const stageLabels = { stage1: '1', stage2: '2', stage3: '3' };
+    const stageColors = {
+        stage1: '',
+        stage2: 'background:rgba(0,212,255,0.15);color:var(--accent-cyan);',
+        stage3: 'background:rgba(224,86,253,0.15);color:var(--star-5);'
+    };
+
+    stageOrder.forEach((key, idx) => {
+        const stage = data.stages[key];
+        html += `<div class="stage-col"><div class="major-stage">
+            <div class="major-stage-header">
+                <div class="stage-num" style="${stageColors[key] || ''}">${stageLabels[key]}</div>
+                <div>
+                    <div class="stage-title">${stage.name}</div>
+                    <div class="stage-desc">${stage.desc}</div>
+                </div>
+            </div>
+            <div>`;
+
+        stage.teams.forEach(t => {
+            const isUserPick = key === 'stage3';
+            html += `<div class="team-chip ${isUserPick ? 'locked' : ''}">
+                <span class="chip-rank">#${t.rank}</span>
+                ${t.name}
+                ${tierBadge(t.tier)}
+            </div>`;
+        });
+
+        html += `</div></div></div>`;
+        if (idx < 2) html += `<div class="flow-arrow">→</div>`;
+    });
+
+    html += `</div>
+
+        <div style="margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.6;">
+            <strong>Flow:</strong> Stage 1 (Challengers) → Stage 2 (Legends) → Stage 3 (Champions/Playoffs).
+            Swiss format: 3 wins to advance, 3 losses to be eliminated.
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:24px;">
+            <button class="btn btn-confirm" onclick="confirmOpenEvent()">✓ OPEN MAJOR</button>
+            <button class="btn btn-secondary" onclick="renderMajorStep1()">← Back</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    `;
+
+    document.getElementById('modalContent').innerHTML = html;
+}
+
+// ============================================================
+// CONFIRM OPEN EVENT
+// ============================================================
+function confirmOpenEvent() {
+    const evt = modalState.event;
+    const inviteData = modalState.inviteData;
+    const teamNames = inviteData.teams.map(t => t.name);
+
+    // Update cooldown (localStorage)
+    eventCooldowns[evt.name] = currentSimDate.toISOString();
+
+    // Update team star participation dates
+    if (evt.stars <= 4) {
+        inviteData.teams.forEach(t => {
+            const team = teams.find(tt => tt.name === t.name);
+            if (team) {
+                team.starPart[evt.stars] = currentSimDate.toISOString();
+            }
+        });
+    }
+
+    eventHistory.push({
+        date: currentSimDate.toISOString(),
+        event: evt.name,
+        stars: evt.stars,
+        region: evt.region,
+        teamsCount: teamNames.length,
+        teams: teamNames,
+        format: evt.format,
+        type: evt.type
+    });
+
+    saveState();
+    closeModal();
+    runAnalysis();
+    renderHistory();
+    renderDashboard();
+    renderEventList();
+    renderRanking();
+}
+
+function closeModal() {
+    document.getElementById('eventModal').classList.remove('show');
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+    const totalTeams = teams.length;
+    const totalEvents = events.length;
+    const majors = events.filter(e => e.stars === 5).length;
+
+    document.getElementById('dashStats').innerHTML = `
+        <div class="card">
+            <div class="stat-label">TOTAL TEAMS</div>
+            <div class="stat-value" style="color:var(--accent-cyan)">${totalTeams}</div>
+        </div>
+        <div class="card">
+            <div class="stat-label">TOTAL EVENTS</div>
+            <div class="stat-value" style="color:var(--accent-blue)">${totalEvents}</div>
+        </div>
+        <div class="card">
+            <div class="stat-label">MAJORS (${new Date(currentSimDate).getFullYear()})</div>
+            <div class="stat-value" style="color:var(--star-5)">${majorsThisYear}/2</div>
+        </div>
+        <div class="card">
+            <div class="stat-label">EVENTS OPENED</div>
+            <div class="stat-value" style="color:var(--accent-green)">${eventHistory.length}</div>
+        </div>
+    `;
+
+    const top10 = teams.slice(0, 10);
+    let top10Html = '';
+    top10.forEach(t => {
+        top10Html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(42,43,61,0.3);">
+            <span class="rank-num ${t.rank <= 3 ? 'top3' : 'top10'}" style="min-width:24px;">${t.rank}</span>
+            <span class="team-name" style="flex:1;font-size:13px;">${t.name}</span>
+            <span class="points-val" style="font-size:12px;">${t.points.toFixed(1)}</span>
+            ${tierBadge(t.tier)}
+            ${t.streak >= 3 ? '<span class="rising-badge">🔥W' + t.streak + '</span>' : ''}
+        </div>`;
+    });
+    document.getElementById('dashTop10').innerHTML = top10Html;
+
+    let starDistHtml = '';
+    for (let s = 1; s <= 5; s++) {
+        const count = events.filter(e => e.stars === s).length;
+        const label = s === 5 ? 'MAJOR' : `${s} STAR`;
+        const colors = ['', 'var(--star-1)', 'var(--star-2)', 'var(--star-3)', 'var(--star-4)', 'var(--star-5)'];
+        starDistHtml += `<div style="text-align:center;">
+            <div style="font-size:28px;margin-bottom:4px;">${'★'.repeat(s)}</div>
+            <div style="font-family:'Orbitron';font-size:24px;font-weight:800;color:${colors[s]};">${count}</div>
+            <div style="font-size:11px;color:var(--text-muted);letter-spacing:1px;">${label}</div>
+        </div>`;
+    }
+    document.getElementById('dashStarDist').innerHTML = starDistHtml;
+
+    // Top rec for dashboard
+    const sorted = events.map(e => ({ event: e, score: analysisScores[e.name] || 0 })).sort((a, b) => b.score - a.score);
+    if (sorted.length > 0 && sorted[0].score > 0) {
+        const best = sorted[0];
+        document.getElementById('dashTopRec').innerHTML = `
+            <div style="font-size:18px;font-weight:700;margin-bottom:8px;">${best.event.name}</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">${starBadge(best.event.stars)} ${regionBadge(best.event.region)}</div>
+            <div style="font-size:13px;color:var(--text-secondary);">AI Score: <span style="color:var(--accent-green);font-weight:700;">${best.score}</span></div>
+            <button class="btn btn-primary" style="margin-top:12px;" onclick="switchPage('analyzer')">Open Analyzer →</button>
+        `;
+    }
+}
+
+// ============================================================
+// RANKING PAGE (now with star participation columns)
+// ============================================================
+let rankFilters = { region: 'all', tier: 'all' };
+
+function renderRanking() {
+    filterRanking();
+    document.getElementById('rankingCount').textContent = `${teams.length} TEAMS`;
+}
+
+function setRankFilter(btn) {
+    const filter = btn.dataset.filter;
+    const value = btn.dataset.value;
+    rankFilters[filter] = value;
+    document.querySelectorAll(`.filter-btn[data-filter="${filter}"]`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterRanking();
+}
+
+function filterRanking() {
+    const search = document.getElementById('rankSearch').value.toLowerCase();
+    let filtered = teams.filter(t => {
+        if (search && !t.name.toLowerCase().includes(search)) return false;
+        if (rankFilters.region !== 'all' && !t.region.includes(rankFilters.region)) return false;
+        if (rankFilters.tier !== 'all' && t.tier !== rankFilters.tier) return false;
+        return true;
+    });
+
+    let html = '';
+    filtered.forEach(t => {
+        html += `<tr>
+            <td><span class="rank-num ${t.rank <= 3 ? 'top3' : t.rank <= 10 ? 'top10' : ''}">${t.rank}</span></td>
+            <td class="team-name">${t.name} ${t.streak >= 5 ? '<span class="rising-badge">🔥 RISING</span>' : ''}</td>
+            <td class="points-val">${t.points.toFixed(1)}</td>
+            <td>${tierBadge(t.tier)}</td>
+            <td>${regionBadge(t.region)}</td>
+            <td style="color:var(--accent-green);">${t.victories}</td>
+            <td style="color:var(--accent-red);">${t.losses}</td>
+            <td style="font-family:'JetBrains Mono';font-size:12px;color:${t.streak > 0 ? 'var(--accent-green)' : 'var(--text-muted)'};">${t.streak > 0 ? `W${t.streak}` : '—'}</td>
+            <td style="text-align:center;">${starPartBadge(t.starPart[4])}</td>
+            <td style="text-align:center;">${starPartBadge(t.starPart[3])}</td>
+            <td style="text-align:center;">${starPartBadge(t.starPart[2])}</td>
+            <td style="text-align:center;">${starPartBadge(t.starPart[1])}</td>
+        </tr>`;
+    });
+    document.getElementById('rankingBody').innerHTML = html;
+}
+
+// ============================================================
+// EVENTS LIST PAGE (now shows last date from Excel + localStorage)
+// ============================================================
+let eventFilters = { eregion: 'all', estar: 'all' };
+
+function renderEventList() {
+    filterEvents();
+    document.getElementById('eventCount').textContent = `${events.length} EVENTS`;
+}
+
+function setEventFilter(btn) {
+    const filter = btn.dataset.filter;
+    const value = btn.dataset.value;
+    eventFilters[filter] = value;
+    document.querySelectorAll(`.filter-btn[data-filter="${filter}"]`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterEvents();
+}
+
+function filterEvents() {
+    const search = (document.getElementById('eventSearch')?.value || '').toLowerCase();
+    let filtered = events.filter(e => {
+        if (search && !e.name.toLowerCase().includes(search)) return false;
+        if (eventFilters.eregion !== 'all' && e.region !== eventFilters.eregion) return false;
+        if (eventFilters.estar !== 'all' && e.stars !== parseInt(eventFilters.estar)) return false;
+        return true;
+    });
+
+    filtered.sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name));
+
+    const expectedIntervals = { 1: 21, 2: 40, 3: 60, 4: 80, 5: 180 };
+
+    let html = `<div style="display:grid;grid-template-columns:40px 1fr 80px 80px 120px 80px;padding:10px 16px;border-bottom:1px solid var(--border);">
+        <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">#</span>
+        <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">EVENT</span>
+        <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">STARS</span>
+        <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">REGION</span>
+        <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">LAST DATE</span>
+        <span style="font-family:'Orbitron';font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text-muted);">STATUS</span>
+    </div>`;
+
+    filtered.forEach((e, i) => {
+        const lastDate = getEventLastDate(e);
+        let lastDateStr = '<span style="color:var(--text-muted);font-size:11px;">—</span>';
+        let status = 'NEW';
+        let statusColor = 'var(--accent-green)';
+
+        if (lastDate) {
+            lastDateStr = `<span class="cooldown-date">${formatDateDisplay(lastDate)}</span>`;
+            const daysSince = daysBetween(new Date(lastDate), currentSimDate);
+            const expected = expectedIntervals[e.stars] || 30;
+            if (daysSince < expected) {
+                status = `${expected - daysSince}d`;
+                statusColor = 'var(--accent-orange)';
+            } else {
+                status = 'READY';
+                statusColor = 'var(--accent-green)';
+            }
+        }
+
+        html += `<div class="event-list-item" onclick="openEventSetup('${e.name.replace(/'/g, "\\'")}')">
+            <span class="event-idx">${i + 1}</span>
+            <span class="event-name-col">${e.name}</span>
+            <span>${starBadge(e.stars)}</span>
+            <span>${regionBadge(e.region)}</span>
+            <span>${lastDateStr}</span>
+            <span style="font-size:12px;font-weight:700;color:${statusColor};">${status}</span>
+        </div>`;
+    });
+
+    document.getElementById('eventListBody').innerHTML = html;
+}
+
+// ============================================================
+// RULES PAGE (Updated with rank-range system)
+// ============================================================
+function renderRules() {
+    const rules = [
+        { star: 1, title: 'ENTRY LEVEL', teams: '~8', desc: 'Ranks #100–160+ (global). New teams and lower-ranked get opportunities. Teams with long absence from ★1 events get priority. Rising teams (streak) boosted.', tiers: 'Tier 3 (lower)', freq: 'Every ~3 weeks', range: '100–160' },
+        { star: 2, title: 'DEVELOPING', teams: '~10-12', desc: 'Ranks #50–160 (global). Mid-range teams compete. Teams that haven\'t played ★2 recently get preference.', tiers: 'Tier 3 (mid)', freq: 'Every ~5-6 weeks', range: '50–160' },
+        { star: 3, title: 'COMPETITIVE', teams: '~12-16', desc: 'Ranks #15–80 (global). Strong competition. Long absence from ★3 events prioritized. Streak bonus applied.', tiers: 'Tier 2-3 (upper)', freq: 'Every ~8-9 weeks', range: '15–80' },
+        { star: 4, title: 'ELITE', teams: '~16', desc: 'Ranks #1–35 (global). Premium events. Top-ranked teams, with participation recency as tiebreaker.', tiers: 'Tier 1-2', freq: 'Every ~11-13 weeks', range: '1–35' },
+        { star: 5, title: 'MAJOR', teams: '24+', desc: 'Swiss format, 3 stages. Stage 3 (Playoffs) chosen by user, Stage 2 (top 8 auto), Stage 1 (next 16 auto). Max 2/year.', tiers: 'All top tiers', freq: '2 per year max', range: 'All' }
+    ];
+
+    let gridHtml = '';
+    rules.forEach(r => {
+        gridHtml += `<div class="rule-card s${r.star}">
+            <div class="rule-stars">${'★'.repeat(r.star)}</div>
+            <div class="rule-title">${r.title}</div>
+            <div style="font-family:'Orbitron';font-size:22px;font-weight:800;color:var(--text-primary);margin:4px 0;">${r.teams}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">teams · ranks ${r.range}</div>
+            <div style="font-size:11px;color:var(--accent-cyan);margin-top:8px;">${r.freq}</div>
+        </div>`;
+    });
+    document.getElementById('rulesGrid').innerHTML = gridHtml;
+
+    let detailHtml = '<div style="display:grid;gap:16px;">';
+    rules.forEach(r => {
+        detailHtml += `<div style="display:grid;grid-template-columns:80px 1fr;gap:16px;align-items:start;padding:12px 0;border-bottom:1px solid rgba(42,43,61,0.3);">
+            <div style="text-align:center;">${starBadge(r.star)}</div>
+            <div>
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${r.title}</div>
+                <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">${r.desc}</div>
+                <div style="margin-top:6px;font-size:12px;">
+                    <span style="color:var(--text-muted);">Rank Range:</span> <span style="color:var(--accent-cyan);">#${r.range}</span>
+                    · <span style="color:var(--text-muted);">Frequency:</span> <span style="color:var(--accent-orange);">${r.freq}</span>
+                </div>
+                <div style="margin-top:4px;font-size:11px;color:var(--text-muted);line-height:1.5;">
+                    ℹ️ Regional events adapt the rank range proportionally to the number of teams in that region.
+                    Priority: teams that haven't participated in ★${r.star} events recently. Streak (winning run) gives extra boost.
+                </div>
+            </div>
+        </div>`;
+    });
+    detailHtml += '</div>';
+    document.getElementById('rulesDetail').innerHTML = detailHtml;
+
+    document.getElementById('majorRulesDetail').innerHTML = `
+        <div style="font-size:14px;color:var(--text-secondary);line-height:1.8;margin-bottom:20px;">
+            The Major uses a <strong style="color:var(--accent-cyan);">Swiss System</strong> across <strong>3 stages</strong>.
+            Teams need <strong>3 wins</strong> to advance and are eliminated after <strong>3 losses</strong>. Only <strong>2 Majors per year</strong> are recommended.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+            <div class="major-stage">
+                <div class="major-stage-header">
+                    <div class="stage-num">1</div>
+                    <div><div class="stage-title">Challengers Stage</div><div class="stage-desc">Auto-filled from ranking</div></div>
+                </div>
+                <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
+                    Next 16 best teams (after Stage 2) compete in Swiss format. Auto-selected by the system based on ranking.
+                </div>
+            </div>
+            <div class="major-stage">
+                <div class="major-stage-header">
+                    <div class="stage-num" style="background:rgba(0,212,255,0.15);color:var(--accent-cyan);">2</div>
+                    <div><div class="stage-title">Legends Stage</div><div class="stage-desc">Top 8 from ranking (auto)</div></div>
+                </div>
+                <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
+                    The 8 best current teams (auto-selected). Stage 1 winners join them here.
+                </div>
+            </div>
+            <div class="major-stage">
+                <div class="major-stage-header">
+                    <div class="stage-num" style="background:rgba(224,86,253,0.15);color:var(--star-5);">3</div>
+                    <div><div class="stage-title">Champions Stage</div><div class="stage-desc">User-selected teams</div></div>
+                </div>
+                <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
+                    <strong>You choose</strong> which teams enter the Playoffs. These are pre-qualified seeds that only you know. Stage 2 winners join them.
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:16px;padding:12px;background:rgba(224,86,253,0.06);border:1px solid rgba(224,86,253,0.2);border-radius:8px;font-size:12px;color:var(--text-secondary);line-height:1.6;">
+            <strong style="color:var(--star-5);">📌 Note:</strong> There are 9 Major events in the database. The AI recommends max 2 per year but will never block you.
+        </div>
+    `;
+}
+
+// ============================================================
+// HISTORY PAGE
+// ============================================================
+function renderHistory() {
+    if (eventHistory.length === 0) {
+        document.getElementById('historyList').innerHTML = `
+            <div class="empty-state">
+                <div class="icon">◉</div>
+                <p>No events opened yet. Use the Analyzer to open events and build your history.</p>
+            </div>`;
+        return;
+    }
+
+    const sorted = [...eventHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let html = '';
+    sorted.forEach(h => {
+        html += `<div class="history-item">
+            <div class="history-date">${formatDateDisplay(h.date)}</div>
+            <div style="flex:1;">
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${h.event}</div>
+                <div style="display:flex;gap:6px;margin-bottom:4px;">${starBadge(h.stars)} ${regionBadge(h.region)}</div>
+                <div style="font-size:12px;color:var(--text-muted);">${h.teamsCount} teams · ${(h.format || 'bracket').toUpperCase()}</div>
+                <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">
+                    ${h.teams.slice(0, 8).map(t => `<span class="team-chip" style="font-size:11px;padding:2px 8px;cursor:default;">${t}</span>`).join('')}
+                    ${h.teams.length > 8 ? `<span style="font-size:11px;color:var(--text-muted);padding:4px;">+${h.teams.length - 8} more</span>` : ''}
+                </div>
+            </div>
+        </div>`;
+    });
+
+    document.getElementById('historyList').innerHTML = html;
+}
+
+function clearHistory() {
+    if (confirm('Clear all event history and cooldowns? This cannot be undone.')) {
+        eventHistory = [];
+        eventCooldowns = {};
+        majorsThisYear = 0;
+        saveState();
+        renderHistory();
+        renderDashboard();
+        renderEventList();
+        runAnalysis();
+    }
+}
+
+function exportHistory() {
+    const data = JSON.stringify(eventHistory, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'event_history.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', loadData);
+
+document.getElementById('eventModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,971 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NEXUS · Ranking Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell" id="appShell">
+
+  <!-- ════════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">◀</button>
+
+    <div class="logo">NEXUS</div>
+    <div class="logo-sub">Ranking Command</div>
+
+    <div class="sidebar-nav">
+      <div class="sidebar-section">Main Views</div>
+      <a class="nav-item active" data-panel="dashboard" onclick="switchPanel('dashboard');return false" href="#">
+        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" data-panel="charts" onclick="switchPanel('charts');return false" href="#">
+        <span class="nav-icon">📈</span><span class="nav-label">Charts & Analytics</span>
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">Rankings</div>
+      <a class="nav-item" data-panel="global" onclick="switchPanel('global');return false" href="#">
+        <span class="nav-icon">🌐</span><span class="nav-label">Global Ranking</span>
+      </a>
+      <a class="nav-item" data-panel="region" onclick="switchPanel('region');return false" href="#">
+        <span class="nav-icon">🗺</span><span class="nav-label">Regional Ranking</span>
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">Tools</div>
+      <a class="nav-item" data-panel="predictor" onclick="switchPanel('predictor');return false" href="#">
+        <span class="nav-icon">⚡</span><span class="nav-label">Points Diff</span>
+      </a>
+      <a class="nav-item" data-panel="legends" onclick="switchPanel('legends');return false" href="#">
+        <span class="nav-icon">👑</span><span class="nav-label">Legends Hall</span>
+      </a>
+      <a class="nav-item" data-panel="pro-analyses" onclick="switchPanel('pro-analyses');return false" href="#">
+        <span class="nav-icon">🎯</span><span class="nav-label">Pro Analyses</span>
+      </a>
+      <a class="nav-item" data-panel="seeding" onclick="switchPanel('seeding');return false" href="#">
+        <span class="nav-icon">🌱</span><span class="nav-label">Seeding</span>
+      </a>
+      <a class="nav-item" data-panel="events" onclick="switchPanel('events');return false" href="#">
+        <span class="nav-icon">🏆</span><span class="nav-label">Events</span>
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">Intelligence</div>
+      <a class="nav-item" data-panel="analysis-vrs" onclick="switchPanel('analysis-vrs');return false" href="#">
+        <span class="nav-icon">🧠</span><span class="nav-label">VRS Analysis</span>
+      </a>
+      <a class="nav-item" data-panel="analysis-hltv" onclick="switchPanel('analysis-hltv');return false" href="#">
+        <span class="nav-icon">🔬</span><span class="nav-label">Data Insights</span>
+      </a>
+      <a class="nav-item" data-panel="h2h" onclick="switchPanel('h2h');return false" href="#">
+        <span class="nav-icon">⚔️</span><span class="nav-label">H2H Analysis</span>
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">Management</div>
+      <a class="nav-item" data-panel="finances" onclick="switchPanel('finances');return false" href="#">
+        <span class="nav-icon">💰</span><span class="nav-label">Finances</span>
+      </a>
+      <a class="nav-item" data-panel="database" onclick="switchPanel('database');return false" href="#">
+        <span class="nav-icon">🗄️</span><span class="nav-label">Database</span>
+      </a>
+      <a class="nav-item" data-panel="events-org" onclick="switchPanel('events-org');return false" href="#">
+        <span class="nav-icon">📋</span><span class="nav-label">Events Organizer</span>
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="side-stat">
+        <div class="side-pill"><span class="side-pill-label">Teams</span><span class="side-pill-value" id="sideTeams">—</span></div>
+        <div class="side-pill"><span class="side-pill-label">Risers</span><span class="side-pill-value up" id="sideUp">—</span></div>
+        <div class="side-pill"><span class="side-pill-label">Fallers</span><span class="side-pill-value down" id="sideDown">—</span></div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <a class="nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Back to Menu</span></a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-text">NEXUS · KZ Studio · by Kilzys</div>
+      <div class="sidebar-footer-text" style="margin-top:2px; color:var(--muted2)">Local processing · No API</div>
+    </div>
+  </aside>
+
+  <!-- ════════════════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="page-sub">NEXUS Ranking Command Center · Unified View</div>
+      </div>
+      <div class="top-bar-actions">
+        <button class="btn btn-ghost" id="btnReloadOld">↺ Reload Old</button>
+        <button class="btn btn-ghost" id="btnReloadNew">↺ Reload New</button>
+        <button class="btn btn-primary" id="btnCompare">⟳ Compare</button>
+        <button class="btn btn-ghost" id="btnDownloadCsv" disabled>↓ CSV</button>
+      </div>
+    </div>
+
+    <!-- Panels container -->
+    <div class="panels">
+
+      <!-- Status (always visible) -->
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div class="status-bar" style="flex:1; min-width:200px;">
+          <div class="status-dot loading" id="statusDot"></div>
+          <span id="statusText">Loading files automatically…</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           DASHBOARD
+      ═══════════════════════════════════════ -->
+      <div class="panel active" id="panel-dashboard">
+
+        <div class="stats-row" id="statsRow" style="display:none">
+          <div class="stat-pill"><span class="stat-label">Teams</span><span class="stat-value" id="countTeams">0</span></div>
+          <div class="stat-pill"><span class="stat-label">Top Team</span><span class="stat-value" id="countTop" style="font-size:14px">—</span></div>
+          <div class="stat-pill"><span class="stat-label">Avg Pts</span><span class="stat-value" id="countAvg">0</span></div>
+          <div class="stat-pill"><span class="stat-label">Risers</span><span class="stat-value up" id="countUp">0</span></div>
+          <div class="stat-pill"><span class="stat-label">Fallers</span><span class="stat-value down" id="countDown">0</span></div>
+          <div class="stat-pill"><span class="stat-label">No Change</span><span class="stat-value" id="countFlat">0</span></div>
+          <div class="stat-pill"><span class="stat-label">New</span><span class="stat-value warn" id="countNew">0</span></div>
+        </div>
+
+        <!-- Change History -->
+        <div class="card change-history-card" id="changeHistoryCard" style="display:none">
+          <div class="card-header">
+            <div><div class="card-title">📋 Change History</div><div class="card-subtitle">Last file load timestamps</div></div>
+            <button class="btn btn-ghost" id="btnClearHistory" title="Clear history">✕ Clear</button>
+          </div>
+          <div class="card-body" style="padding:12px 16px">
+            <div class="change-history-list" id="changeHistoryList">
+              <div class="empty-state" style="font-size:12px; padding:8px">No changes recorded yet.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+          <div class="card">
+            <div class="card-header">
+              <div><div class="card-title">Region Overview</div><div class="card-subtitle">avg by selected metric</div></div>
+              <select id="dashMetric" class="form-control" style="min-width:130px">
+                <option value="Points">Points</option>
+                <option value="Victories">Victories</option>
+                <option value="Streak">Streak</option>
+                <option value="Loses">Loses</option>
+                <option value="Prestige">Prestige</option>
+                <option value="Majors">Majors</option>
+                <option value="Tournaments Trophies">Trophies</option>
+              </select>
+            </div>
+            <div class="card-body chart-wrap">
+              <div class="state" id="regionChartState"><span class="spinner"></span>Loading…</div>
+              <canvas id="regionChart" style="display:none; max-height:220px"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div><div class="card-title">Top 10 Teams</div><div class="card-subtitle" id="top10Subtitle">by Points</div></div>
+            </div>
+            <div class="card-body chart-wrap">
+              <div class="state" id="topChartState"><span class="spinner"></span>Loading…</div>
+              <canvas id="topChart" style="display:none; max-height:220px"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Full Ranking</div><div class="card-subtitle" id="dashTableSubtitle">sorted by Points</div></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-ghost dash-sort-btn" id="btnDashSortOrder" title="Toggle sort order">↓ Desc</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div class="table-wrapper" style="max-height:600px" id="dashTableWrap">
+              <div class="state" id="dashTableState">Loading…</div>
+              <table id="dashTable" style="display:none"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           CHARTS & ANALYTICS
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-charts">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Analytics Dashboard</div><div class="card-subtitle">Visual breakdowns across metrics</div></div>
+            <div class="controls-row">
+              <div class="form-group"><label class="form-label">Region</label>
+                <select id="chartRegionFilter" class="form-control" style="min-width:130px">
+                  <option value="Global">Global</option>
+                  <option value="EU">Europe</option>
+                  <option value="AS/SIS/ESEA">Asia</option>
+                  <option value="AM">Americas</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="mini-grid">
+              <div class="mini-panel"><h4>🔥 Streak — Top 10</h4>
+                <div class="state" id="streakChartState"><span class="spinner"></span></div>
+                <canvas id="streakChart" style="display:none"></canvas>
+              </div>
+              <div class="mini-panel"><h4>🏅 Victories — Top 10</h4>
+                <div class="state" id="victoriesChartState"><span class="spinner"></span></div>
+                <canvas id="victoriesChart" style="display:none"></canvas>
+              </div>
+              <div class="mini-panel"><h4>⭐ Prestige — Top 10</h4>
+                <div class="state" id="prestigeChartState"><span class="spinner"></span></div>
+                <canvas id="prestigeChart" style="display:none"></canvas>
+              </div>
+              <div class="mini-panel"><h4>🎯 Majors — by Team</h4>
+                <div class="state" id="majorsChartState"><span class="spinner"></span></div>
+                <canvas id="majorsChart" style="display:none"></canvas>
+              </div>
+              <div class="mini-panel" style="grid-column:1/-1"><h4>📈 Points — Top 20 Line</h4>
+                <div class="state" id="comparisonChartState"><span class="spinner"></span></div>
+                <canvas id="comparisonChart" style="display:none; max-height:220px"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Wins vs Losses</div><div class="card-subtitle">select a team</div></div>
+            <select id="teamPieSelect" class="form-control" style="min-width:180px"></select>
+          </div>
+          <div class="card-body chart-wrap">
+            <div class="state" id="teamPieState">Select a team above.</div>
+            <canvas id="teamPieChart" style="display:none; max-height:280px"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           GLOBAL RANKING (VRS style)
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-global">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Global Ranking</div><div class="card-subtitle">Sorted by Points · Old vs New comparison</div></div>
+            <div class="controls-row">
+              <div class="form-group"><label class="form-label">Region</label>
+                <select class="form-control" id="filterRegion" disabled style="min-width:130px"><option value="">All Regions</option></select>
+              </div>
+              <div class="form-group"><label class="form-label">Tier</label>
+                <select class="form-control" id="filterTier" disabled style="min-width:110px">
+                  <option value="">All Tiers</option>
+                  <option value="Tier S">Tier S</option><option value="Tier 1">Tier 1</option>
+                  <option value="Tier 2">Tier 2</option><option value="Tier 3">Tier 3</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">Search</label>
+                <input class="form-control" id="filterText" type="text" placeholder="Team name…" disabled style="min-width:160px">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn btn-ghost" id="btnClearFilters" disabled>✕ Clear</button>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr>
+                <th style="width:50px">#</th><th>Team</th><th class="right">Points</th>
+                <th class="right">Δ Pts</th><th class="right">Streak</th><th>Region</th>
+                <th>Tier</th><th class="right">Position Δ</th>
+                <th class="right" style="font-size:10px">Old → New</th>
+              </tr></thead>
+              <tbody id="tbody"><tr><td colspan="9" class="empty-state">No data yet. Files are loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           REGIONAL RANKING
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-region">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Regional Ranking</div><div class="card-subtitle">Position changes computed within region</div></div>
+            <div class="form-group"><label class="form-label">Select Region</label>
+              <select class="form-control" id="regionRankingSelect" disabled><option value="">—</option></select>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr>
+                <th style="width:50px">#</th><th>Team</th><th class="right">Points</th>
+                <th class="right">Δ Pts</th><th class="right">Streak</th><th>Tier</th>
+                <th class="right">Position Δ</th>
+                <th class="right" style="font-size:10px">Old → New</th>
+              </tr></thead>
+              <tbody id="tbodyRegion"><tr><td colspan="8" class="empty-state">Select a region to display its ranking.</td></tr></tbody>
+            </table>
+          </div>
+          <div style="padding:12px 16px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); font-family:var(--font-mono);">
+            Movement (Old → New) is calculated within the selected region.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           MATCH PREDICTOR
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-predictor">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Match Predictor</div><div class="card-subtitle">ELO-based simulation with streak multiplier</div></div>
+          </div>
+          <div class="card-body">
+            <div class="controls-row" style="margin-bottom:16px">
+              <div class="form-group"><label class="form-label">Team A</label>
+                <select class="form-control" id="matchTeamA" disabled><option value="">— Select —</option></select>
+              </div>
+              <div style="display:flex; align-items:flex-end; padding-bottom:1px">
+                <span style="font-family:var(--font-display); font-weight:800; color:var(--muted2); font-size:18px">VS</span>
+              </div>
+              <div class="form-group"><label class="form-label">Team B</label>
+                <select class="form-control" id="matchTeamB" disabled><option value="">— Select —</option></select>
+              </div>
+              <div class="form-group"><label class="form-label">Result</label>
+                <select class="form-control" id="matchResult" disabled>
+                  <option value="A">Team A wins</option><option value="B">Team B wins</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="vsMeter" style="display:none; margin-bottom:16px">
+              <div class="vs-display">
+                <div class="vs-team">
+                  <div class="vs-team-name" id="vsAName">—</div>
+                  <div class="vs-team-pts" id="vsAPts">—</div>
+                  <div class="text-xs text-muted mono" style="margin-top:4px">Win prob: <strong id="vsAProb">—</strong></div>
+                </div>
+                <div>
+                  <div class="vs-divider">VS</div>
+                  <div class="vs-prob-bar" style="width:120px; margin-top:8px">
+                    <div class="vs-prob-a" id="vsProbBarA" style="width:50%"></div>
+                    <div class="vs-prob-b" id="vsProbBarB" style="width:50%"></div>
+                  </div>
+                </div>
+                <div class="vs-team">
+                  <div class="vs-team-name" id="vsBName">—</div>
+                  <div class="vs-team-pts" id="vsBPts">—</div>
+                  <div class="text-xs text-muted mono" style="margin-top:4px">Win prob: <strong id="vsBProb">—</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="status-bar" id="matchStatus" style="margin-bottom:14px">
+              <div class="status-dot"></div>
+              <span>Select two teams to preview point and ranking changes.</span>
+            </div>
+
+            <div class="table-wrapper" style="max-height:40vh">
+              <table>
+                <thead><tr>
+                  <th style="width:50px">Pos</th><th>Team</th><th class="right">Points</th>
+                  <th class="right">Streak</th><th class="right">Δ Pts</th><th class="right">New Pts</th>
+                  <th class="right">Movement</th>
+                  <th class="right" style="font-size:10px">Old → New</th>
+                </tr></thead>
+                <tbody id="tbodyMatchPredict"><tr><td colspan="8" class="empty-state">No selection yet.</td></tr></tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:10px; font-size:11px; color:var(--muted); font-family:var(--font-mono); line-height:1.6">
+              Rules: ELO-based point transfer. K = 30 × (1 + streak bonus) × (1 + tournament bonus), capped at K×1.35.
+              Win streak increments after win; resets to 0 after loss.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           LEGENDS HALL
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-legends">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Legends Hall</div><div class="card-subtitle">Teams with 1700+ points</div></div>
+            <select id="legendsRegionFilter" class="form-control" style="min-width:130px">
+              <option value="Global">Global</option>
+              <option value="AM">Americas</option>
+              <option value="EU">Europe</option>
+              <option value="AS/SIS/ESEA">Asia</option>
+            </select>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div class="table-wrapper" id="legendsTableWrap">
+              <div class="state" id="legendsTableState">Load data to see Legends.</div>
+              <table id="legendsTable" style="display:none"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           VRS ANALYSIS
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-analysis-vrs">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">VRS Analysis</div><div class="card-subtitle">Automated insights from ranking comparison</div></div>
+            <button class="btn btn-primary" id="btnRunVrsAnalysis" disabled>🧠 Generate Analysis</button>
+          </div>
+          <div class="card-body">
+            <div id="aiContentVrs">
+              <div class="empty-state">Load ranking data and click <strong>Generate Analysis</strong> to see insights.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           DATA INSIGHTS (HLTV-style)
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-analysis-hltv">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Data Insights</div><div class="card-subtitle">Auto-generated from current dataset</div></div>
+            <button class="btn btn-ai" id="btnRunHltvAnalysis" disabled>🔬 Analyze Data</button>
+          </div>
+          <div class="card-body">
+            <div class="ai-output" id="aiOutputHltv" style="min-height:80px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           PRO ANALYSES
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-pro-analyses">
+
+        <!-- TAB SWITCHER -->
+        <div class="pa-tabs">
+          <button class="pa-tab active" data-pa-tab="history" onclick="switchPaTab('history')">
+            <span class="pa-tab-icon">📜</span>
+            <span class="pa-tab-label">Match History</span>
+            <span class="pa-tab-badge" id="paTabHistoryBadge"></span>
+          </button>
+        </div>
+
+        <!-- ═══ MATCH HISTORY TAB ═══ -->
+        <div class="pa-tab-content active" id="pa-tab-history">
+          <div class="card">
+            <div class="card-header">
+              <div><div class="card-title">Match History</div><div class="card-subtitle">Filter and browse all recorded matches</div></div>
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <button class="btn btn-ghost" id="btnClearHistoryFilters">✕ Clear Filters</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- FILTER ROW 1 -->
+              <div class="pa-filters-grid">
+                <div class="form-group pa-filter-group">
+                  <label class="form-label">Team</label>
+                  <div class="pa-autocomplete-wrap">
+                    <input class="form-control" id="paFilterTeam" type="text" placeholder="Search team… (add . for exact)" autocomplete="off">
+                    <div class="pa-autocomplete-list" id="paTeamSuggestions"></div>
+                  </div>
+                </div>
+                <div class="form-group pa-filter-group">
+                  <label class="form-label">Opponent (H2H)</label>
+                  <div class="pa-autocomplete-wrap">
+                    <input class="form-control" id="paFilterOpponent" type="text" placeholder="Search opponent… (add . for exact)" autocomplete="off">
+                    <div class="pa-autocomplete-list" id="paOpponentSuggestions"></div>
+                  </div>
+                </div>
+                <div class="form-group pa-filter-group">
+                  <label class="form-label">Map</label>
+                  <select class="form-control" id="paFilterMap"><option value="">All Maps</option></select>
+                </div>
+                <div class="form-group pa-filter-group">
+                  <label class="form-label">Event</label>
+                  <select class="form-control" id="paFilterEvent"><option value="">All Events</option></select>
+                </div>
+              </div>
+              <!-- FILTER ROW 2 -->
+              <div class="pa-filters-grid" style="margin-top:8px">
+                <div class="form-group pa-filter-group">
+                  <label class="form-label">Date</label>
+                  <input class="form-control" id="paFilterDate" type="date">
+                </div>
+                <div class="form-group pa-filter-group">
+                  <label class="form-label">Month</label>
+                  <select class="form-control" id="paFilterMonth"><option value="">All Months</option></select>
+                </div>
+                <div class="form-group pa-filter-group">
+                  <label class="form-label">Year</label>
+                  <select class="form-control" id="paFilterYear"><option value="">All Years</option></select>
+                </div>
+                <div class="form-group pa-filter-group" style="display:flex; align-items:flex-end;">
+                  <div class="pa-match-count" id="paMatchCount">0 matches</div>
+                </div>
+              </div>
+
+              <!-- HISTORY TABLE -->
+              <div class="table-wrapper" style="max-height:55vh; margin-top:14px">
+                <table id="paHistoryTable">
+                  <thead><tr>
+                    <th>Date</th><th>Team 1</th><th class="center">Result</th><th>Team 2</th>
+                    <th>Map</th><th>Event</th><th class="center">Outcome</th>
+                  </tr></thead>
+                  <tbody id="paHistoryBody">
+                    <tr><td colspan="7" class="empty-state">Load history.xlsx to see matches.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           SEEDING
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-seeding">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Seeding Generator</div><div class="card-subtitle">Strong vs Weak matchup seeding with randomized bracket order</div></div>
+          </div>
+          <div class="card-body">
+            <div class="seed-layout">
+              <!-- Left: team selection -->
+              <div class="seed-input-area">
+
+                <!-- Quick select by text -->
+                <div class="seed-quick-select">
+                  <label class="form-label">Quick Select <span style="color:var(--muted2); font-weight:400">(one team per line)</span></label>
+                  <textarea class="form-control seed-textarea" id="seedQuickInput" rows="5" placeholder="Team Alpha&#10;Team Bravo&#10;Team Charlie&#10;..."></textarea>
+                  <div class="seed-actions" style="margin-top:8px">
+                    <button class="btn btn-ghost" id="btnSeedQuickSelect">⚡ Select Written Teams</button>
+                    <button class="btn btn-ghost" id="btnSeedSelectAll">☑ All</button>
+                    <button class="btn btn-ghost" id="btnSeedClearSelection">✕ Clear</button>
+                  </div>
+                </div>
+
+                <div class="sidebar-divider" style="margin:14px 0"></div>
+
+                <!-- Search filter for team list -->
+                <label class="form-label">Teams from ranking.xlsx <span class="seed-selected-count" id="seedSelectedCount">(0 selected)</span></label>
+                <input class="form-control" id="seedTeamSearch" type="text" placeholder="Filter teams…" style="margin-bottom:8px; min-width:0; width:100%">
+                <div class="seed-team-list" id="seedTeamList">
+                  <div class="empty-state" style="font-size:12px; padding:16px">Loading ranking data…</div>
+                </div>
+
+                <div class="seed-actions" style="margin-top:12px">
+                  <button class="btn btn-primary" id="btnSeedGenerate">🌱 Generate Seeding</button>
+                </div>
+                <div class="seed-info" id="seedInfo"></div>
+              </div>
+
+              <!-- Right: results -->
+              <div class="seed-results-area">
+                <div id="seedOutput">
+                  <div class="empty-state">Select teams and click <strong>Generate Seeding</strong> to create matchups.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           H2H ANALYSIS (Intelligence)
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-h2h">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Head-to-Head Analysis</div><div class="card-subtitle">Select two teams for detailed comparison</div></div>
+          </div>
+          <div class="card-body">
+            <div class="controls-row" style="margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">Team A</label>
+                <div class="pa-autocomplete-wrap">
+                  <input class="form-control" id="h2hTeamA" type="text" placeholder="Search team…" autocomplete="off">
+                  <div class="pa-autocomplete-list" id="h2hTeamASugg"></div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:flex-end; padding-bottom:1px">
+                <span style="font-family:var(--font-display); font-weight:800; color:var(--muted2); font-size:18px">VS</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Team B</label>
+                <div class="pa-autocomplete-wrap">
+                  <input class="form-control" id="h2hTeamB" type="text" placeholder="Search team…" autocomplete="off">
+                  <div class="pa-autocomplete-list" id="h2hTeamBSugg"></div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Map</label>
+                <select class="form-control" id="h2hMapFilter" style="min-width:130px">
+                  <option value="">All Maps</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn btn-primary" id="btnH2hAnalyze">🎯 Analyze</button>
+              </div>
+            </div>
+            <div id="h2hOutput">
+              <div class="empty-state">Select two teams and click <strong>Analyze</strong> to see head-to-head insights.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ═══════════════════════════════════════
+           EVENTS (Ranking Tool)
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-events">
+
+        <!-- Summary stats -->
+        <div class="stats-row" id="eventsStatsRow">
+          <div class="stat-pill"><span class="stat-label">Total Events</span><span class="stat-value" id="evTotalEvents">0</span></div>
+          <div class="stat-pill"><span class="stat-label">Live Now</span><span class="stat-value warn" id="evLiveEvents">0</span></div>
+          <div class="stat-pill"><span class="stat-label">Majors</span><span class="stat-value" id="evMajors">0</span></div>
+          <div class="stat-pill"><span class="stat-label">Total Prize Pool</span><span class="stat-value" id="evTotalPrize" style="font-size:16px">$0</span></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Event Filters</div><div class="card-subtitle">Search and filter events</div></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-primary" id="btnAddEvent">＋ Add Event</button>
+              <button class="btn btn-ghost" id="btnDownloadEventsJson">↓ Export JSON</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="ev-filters-grid">
+              <div class="form-group">
+                <label class="form-label">Event Name</label>
+                <input class="form-control" id="evFilterName" type="text" placeholder="Search event…" style="min-width:0;width:100%">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Player (Medal Winners)</label>
+                <select class="form-control" id="evFilterPlayer"><option value="">All Players</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Team (Tournament Wins)</label>
+                <select class="form-control" id="evFilterTeamWin"><option value="">All Teams</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Stars</label>
+                <select class="form-control" id="evFilterStars">
+                  <option value="">All Stars</option>
+                  <option value="1">⭐ 1 Star</option>
+                  <option value="2">⭐⭐ 2 Stars</option>
+                  <option value="3">⭐⭐⭐ 3 Stars</option>
+                  <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                  <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Region</label>
+                <select class="form-control" id="evFilterRegion">
+                  <option value="">All Regions</option>
+                  <option value="global">🌍 Global</option>
+                  <option value="americas">🌎 Americas</option>
+                  <option value="asia">🌏 Asia</option>
+                  <option value="europe">🌍 Europe</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:flex-end">
+                <button class="btn btn-ghost" id="btnClearEvFilters">✕ Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Events Grid -->
+        <div class="ev-grid" id="eventsGrid">
+          <div class="empty-state">Loading events from <strong>kz-events-backup.json</strong>…</div>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           FINANCES (iframe)
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-finances">
+        <iframe class="panel-iframe" id="iframe-finances" data-src="finances.html"></iframe>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           DATABASE (iframe)
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-database">
+        <iframe class="panel-iframe" id="iframe-database" data-src="database.html"></iframe>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           EVENTS ORGANIZER (iframe)
+      ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-events-org">
+        <iframe class="panel-iframe" id="iframe-events-org" data-src="events.html"></iframe>
+      </div>
+
+    </div><!-- /panels -->
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════════
+     EVENT MODAL (Add / Edit)
+════════════════════════════════════════════ -->
+<div class="ev-modal-overlay" id="evModalOverlay">
+  <div class="ev-modal">
+    <div class="ev-modal-header">
+      <span class="ev-modal-title" id="evModalTitle">Add Event</span>
+      <button class="ev-modal-close" id="evModalClose">✕</button>
+    </div>
+    <div class="ev-modal-body">
+      <div class="ev-modal-grid">
+        <!-- Row 1 -->
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Event Name</label>
+          <input class="form-control" id="evmName" type="text" placeholder="e.g. PGL Major Copenhagen 2024">
+        </div>
+        <!-- Row 2 -->
+        <div class="form-group">
+          <label class="form-label">Google Drive Link</label>
+          <input class="form-control" id="evmDriveLink" type="text" placeholder="https://drive.google.com/...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prize Pool</label>
+          <input class="form-control" id="evmPrizePool" type="text" placeholder="e.g. $1,250,000">
+        </div>
+        <!-- Row 3 -->
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Event Logo</label>
+          <input class="form-control" id="evmLogo" type="text" placeholder="Paste URL or upload an image below...">
+          <div class="ev-logo-upload">
+            <div class="ev-logo-upload-row">
+              <label class="btn btn-sm" style="cursor:pointer; margin:0; white-space:nowrap;">
+                📁 Upload Image
+                <input type="file" id="evmLogoFile" accept="image/*" style="display:none;">
+              </label>
+              <button type="button" class="btn btn-sm" id="evmLogoClear" style="opacity:0.7;">✕ Clear</button>
+            </div>
+            <img id="evmLogoPreview" class="ev-logo-preview" style="display:none;" alt="Logo preview">
+            <p class="ev-logo-hint">Upload a local image or paste a URL above. Uploaded images are stored as base64 in the JSON.</p>
+          </div>
+        </div>
+        <!-- New checkbox -->
+        <div class="form-group" style="grid-column:1/-1; margin-top:4px;">
+          <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="evmBgFromLogo">
+            <span>Use logo as card background (with overlay)</span>
+          </label>
+        </div>
+        <!-- Row 4 -->
+        <div class="form-group">
+          <label class="form-label">Trophy Logo URL</label>
+          <input class="form-control" id="evmTrophy" type="text" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input class="form-control" id="evmCity" type="text" placeholder="Copenhagen">
+        </div>
+        <!-- Row 5 -->
+        <div class="form-group">
+          <label class="form-label">Country</label>
+          <input class="form-control" id="evmCountry" type="text" placeholder="Denmark">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country Flag URL</label>
+          <input class="form-control" id="evmFlag" type="text" placeholder="https://flagcdn.com/w80/dk.png">
+        </div>
+        <!-- Row 6 -->
+        <div class="form-group">
+          <label class="form-label">Number of Teams</label>
+          <input class="form-control" id="evmTeamCount" type="number" placeholder="24" min="2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Importance (Stars)</label>
+          <select class="form-control" id="evmStars">
+            <option value="1">⭐ 1 Star</option>
+            <option value="2">⭐⭐ 2 Stars</option>
+            <option value="3" selected>⭐⭐⭐ 3 Stars</option>
+            <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+            <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+          </select>
+        </div>
+        <!-- Row 7 -->
+        <div class="form-group">
+          <label class="form-label">Major</label>
+          <select class="form-control" id="evmMajor">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Region</label>
+          <select class="form-control" id="evmRegion">
+            <option value="global">🌍 Global</option>
+            <option value="americas">🌎 Americas</option>
+            <option value="asia">🌏 Asia</option>
+            <option value="europe">🌍 Europe</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="evmStatus" style="max-width:260px">
+            <option value="Finished">Finished</option>
+            <option value="Live">Live</option>
+          </select>
+        </div>
+
+        <!-- LIVE fields (hidden by default) -->
+        <div class="ev-live-fields" id="evmLiveFields" style="display:none; grid-column:1/-1">
+          <div class="ev-modal-grid">
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label">Stage</label>
+              <input class="form-control" id="evmStage" type="text" placeholder="e.g. Playoffs / Group Stage">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Next Match 1</label>
+              <input class="form-control" id="evmNext1" type="text" placeholder="Team A vs Team B">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Next Match 2</label>
+              <input class="form-control" id="evmNext2" type="text" placeholder="Team C vs Team D">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label">Next Match 3</label>
+              <input class="form-control" id="evmNext3" type="text" placeholder="Team E vs Team F">
+            </div>
+          </div>
+        </div>
+
+        <!-- FINISHED fields (shown by default) -->
+        <div class="ev-finished-fields" id="evmFinishedFields" style="grid-column:1/-1">
+          <div class="ev-modal-grid">
+            <div class="form-group">
+              <label class="form-label">Winner Team (1st)</label>
+              <input class="form-control" id="evmWinner" type="text" placeholder="Team name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">2nd Place</label>
+              <input class="form-control" id="evmSecond" type="text" placeholder="Team name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">MVP</label>
+              <input class="form-control" id="evmMVP" type="text" placeholder="Player name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">EVP</label>
+              <input class="form-control" id="evmEVP" type="text" placeholder="Player name">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label">VP</label>
+              <input class="form-control" id="evmVP" type="text" placeholder="Player name">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════ PLAYOFF TEAMS ══════════════ -->
+      <div class="ev-section-divider">🏆 Playoff Teams (8 teams)</div>
+      <div class="ev-playoff-teams-grid" id="evmPlayoffTeamsGrid">
+        <!-- 8 team rows generated by JS -->
+      </div>
+
+      <!-- ══════════════ PLAYOFF BRACKET RESULTS ══════════════ -->
+      <div class="ev-section-divider">🗓 Playoff Bracket Results</div>
+      <div class="ev-bracket-edit" id="evmBracketEdit">
+        <div class="ev-bracket-edit-section">
+          <div class="ev-bracket-edit-label">Quarter-Finals</div>
+          <div class="ev-bracket-edit-matches" id="evmQFMatches">
+            <!-- generated by JS after teams are set -->
+          </div>
+        </div>
+        <div class="ev-bracket-edit-section">
+          <div class="ev-bracket-edit-label">Semi-Finals</div>
+          <div class="ev-bracket-edit-matches" id="evmSFMatches"></div>
+        </div>
+        <div class="ev-bracket-edit-section">
+          <div class="ev-bracket-edit-label">Grand Final</div>
+          <div class="ev-bracket-edit-matches" id="evmFinalMatch"></div>
+        </div>
+      </div>
+
+      <!-- ══════════════ PLAYOFF PLAYERS ══════════════ -->
+      <div class="ev-section-divider">👤 Playoff Players (5 per team)</div>
+      <div id="evmPlayersSection">
+        <!-- generated by JS -->
+      </div>
+
+      <!-- ══════════════ PRIZE DISTRIBUTION ══════════════ -->
+      <div class="ev-section-divider">💰 Prize Distribution by Placement</div>
+      <div class="ev-modal-grid">
+        <div class="form-group"><label class="form-label">1st Place</label><input class="form-control" id="evmPrize1st" type="text" placeholder="e.g. $500,000"></div>
+        <div class="form-group"><label class="form-label">2nd Place</label><input class="form-control" id="evmPrize2nd" type="text" placeholder="e.g. $200,000"></div>
+        <div class="form-group"><label class="form-label">3rd–4th Place</label><input class="form-control" id="evmPrize34" type="text" placeholder="e.g. $100,000"></div>
+        <div class="form-group"><label class="form-label">5th–8th Place</label><input class="form-control" id="evmPrize58" type="text" placeholder="e.g. $50,000"></div>
+        <div class="form-group"><label class="form-label">9th–11th Place</label><input class="form-control" id="evmPrize911" type="text" placeholder="e.g. $20,000"></div>
+        <div class="form-group"><label class="form-label">12th–16th Place</label><input class="form-control" id="evmPrize1216" type="text" placeholder="e.g. $10,000"></div>
+        <div class="form-group"><label class="form-label">17th–24th Place</label><input class="form-control" id="evmPrize1724" type="text" placeholder="e.g. $5,000"></div>
+      </div>
+
+      <!-- ══════════════ PLAYER PRIZES ══════════════ -->
+      <div class="ev-section-divider">🎖 Individual Player Prizes</div>
+      <div class="ev-modal-grid">
+        <div class="form-group"><label class="form-label">MVP Prize</label><input class="form-control" id="evmPrizeMVP" type="text" placeholder="e.g. $10,000"></div>
+        <div class="form-group"><label class="form-label">EVP Prize</label><input class="form-control" id="evmPrizeEVP" type="text" placeholder="e.g. $5,000"></div>
+        <div class="form-group"><label class="form-label">VP Prize</label><input class="form-control" id="evmPrizeVP" type="text" placeholder="e.g. $2,500"></div>
+      </div>
+
+    </div>
+    <div class="ev-modal-footer">
+      <button class="btn btn-ghost" id="evModalCancel">Cancel</button>
+      <button class="btn btn-primary" id="evModalSave">💾 Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     EVENT DETAILS MODAL
+════════════════════════════════════════════ -->
+<div class="ev-detail-overlay" id="evDetailOverlay">
+  <div class="ev-detail-modal">
+    <div class="ev-detail-header">
+      <div class="ev-detail-header-left">
+        <img id="evdLogo" class="ev-detail-logo" alt="" style="display:none">
+        <div>
+          <div class="ev-detail-title" id="evdTitle">Event Details</div>
+          <div class="ev-detail-subtitle" id="evdSubtitle"></div>
+        </div>
+      </div>
+      <button class="ev-modal-close" id="evDetailClose">✕</button>
+    </div>
+    <div class="ev-detail-body" id="evDetailBody">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
