@@ -1043,7 +1043,7 @@ body::before {
       <div class="corner-bl"></div><div class="corner-br"></div>
       <div class="upload-icon">🛡</div>
       <div class="upload-label">TEAM_LOGO.JSON</div>
-      <div class="upload-status" id="logo-status">OPTIONAL</div>
+      <div class="upload-status" id="logo-status">AWAITING DATA</div>
     </div>
   </div>
 
@@ -1767,7 +1767,7 @@ async function scanFiles() {
   btn.classList.add('scanning');
   btn.textContent = '⟳ SCANNING...';
   status.style.color = 'var(--cyan)';
-  status.textContent = 'Buscando arquivos em file/...';
+  status.textContent = 'Buscando arquivos em file/ e assets/...';
 
   async function fetchXL(path) {
     const res = await fetch(path);
@@ -1777,39 +1777,65 @@ async function scanFiles() {
     return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
   }
 
+  async function fetchJSON(path) {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(path);
+    return res.json();
+  }
+
+  const errors = [];
+
+  // --- finances.xlsx ---
   try {
-    const [finData, plyData] = await Promise.all([
-      fetchXL('file/finances_updated.xlsx'),
-      fetchXL('file/players_updated.xlsx')
-    ]);
+    const finData = await fetchXL('file/finances_updated.xlsx');
     finances = normalizeFinances(finData); finLoaded = true;
     $('fin-box').classList.add('loaded');
     $('fin-status').textContent = `✓ ${finData.length} RECORDS LOADED`;
+  } catch(e) {
+    errors.push('file/finances_updated.xlsx');
+    $('fin-status').textContent = `✗ NOT FOUND`;
+    $('fin-status').style.color = 'var(--red)';
+  }
+
+  // --- players.xlsx ---
+  try {
+    const plyData = await fetchXL('file/players_updated.xlsx');
     players = normalizePlayers(plyData); plyLoaded = true;
     $('ply-box').classList.add('loaded');
     $('ply-status').textContent = `✓ ${plyData.length} PLAYERS LOADED`;
+  } catch(e) {
+    errors.push('file/players_updated.xlsx');
+    $('ply-status').textContent = `✗ NOT FOUND`;
+    $('ply-status').style.color = 'var(--red)';
+  }
+
+  // --- team_logo.json (auto from assets/) ---
+  try {
+    const logoData = await fetchJSON('assets/team_logo.json');
+    loadTeamLogos(logoData);
+    $('logo-box').classList.add('loaded');
+    $('logo-status').textContent = `✓ ${Object.keys(teamLogos).length} LOGOS LOADED`;
+  } catch(e) {
+    errors.push('assets/team_logo.json');
+    $('logo-status').textContent = `✗ NOT FOUND`;
+    $('logo-status').style.color = 'var(--red)';
+  }
+
+  // --- result ---
+  if (errors.length === 0) {
     $('launch-btn').classList.add('ready');
-
-    // Try to load team logos (optional file)
-    try {
-      const logoRes = await fetch('file/team_logo.json');
-      if (logoRes.ok) {
-        const logoData = await logoRes.json();
-        loadTeamLogos(logoData);
-        $('logo-box').classList.add('loaded');
-        $('logo-status').textContent = `✓ ${Object.keys(teamLogos).length} LOGOS LOADED`;
-      }
-    } catch(le) {
-      $('logo-status').textContent = `— LOGOS NÃO ENCONTRADAS`;
-      $('logo-status').style.color = 'var(--text-dim)';
-    }
-
     status.style.color = 'var(--green)';
     status.textContent = `✓ ARQUIVOS ENCONTRADOS — PRONTO PARA INICIALIZAR`;
     btn.textContent = '✓ FILES LOADED';
-  } catch(e) {
+  } else {
     status.style.color = 'var(--red)';
-    status.textContent = `✗ NÃO ENCONTRADO: ${e.message} — verifique a pasta file/`;
+    status.textContent = `✗ NÃO ENCONTRADO: ${errors.join(', ')}`;
+    // still allow launch if only logos are missing but excel loaded
+    if (finLoaded && plyLoaded) {
+      $('launch-btn').classList.add('ready');
+      status.textContent += ` (logos ausentes — upload manual disponível)`;
+      status.style.color = 'var(--orange)';
+    }
     btn.classList.remove('scanning');
     btn.textContent = '⟳ SCAN FILE/';
   }
