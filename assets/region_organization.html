@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador de Jogadores por Região</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-top: 40px;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 10px;
+        }
+
+        .upload-section {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            border: 2px dashed #bdc3c7;
+            margin-bottom: 30px;
+        }
+
+        .upload-section input {
+            font-size: 16px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .region-group {
+            margin-bottom: 15px;
+        }
+
+        .region-title {
+            background: var(--secondary-color);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .region-title:hover {
+            background: #2c3e50;
+        }
+
+        .region-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            background: #fafafa;
+        }
+
+        .region-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .player-item {
+            background: var(--card-bg);
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            min-width: 140px;
+        }
+
+        .player-name {
+            font-weight: bold;
+            display: block;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .player-country {
+            font-size: 12px;
+            color: #7f8c8d;
+            display: inline-block;
+        }
+
+        .badges {
+            font-weight: bold;
+            background: var(--accent-color);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Organizador de Jogadores por Região</h1>
+    
+    <div class="upload-section">
+        <p><strong>Faça o upload da sua planilha do Excel ou arquivo CSV:</strong></p>
+        <input type="file" id="fileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+    </div>
+
+    <h2>Parte 1: Classificação por Sub-regiões (Detalhado)</h2>
+    <p>Todos os jogadores classificados em suas regiões exatas (Asia, Europe, CIS, South America, etc).</p>
+    <div id="part1"></div>
+
+    <h2>Parte 2: Classificação por Regiões Consolidadas (Macro)</h2>
+    <p>Somente as 3 grandes regiões: <strong>America, Asia ou Europe</strong> (reorganizados por proximidade geográfica).</p>
+    <div id="part2"></div>
+</div>
+
+<script>
+    // Dicionário de mapeamento das regiões baseado na lógica solicitada.
+    const countryMap = {
+        // AMÉRICAS
+        'Brazil': { spec: 'South America', macro: 'America' },
+        'Argentina': { spec: 'South America', macro: 'America' },
+        'Uruguay': { spec: 'South America', macro: 'America' },
+        'Chile': { spec: 'South America', macro: 'America' },
+        'United States': { spec: 'North America', macro: 'America' },
+        'Canada': { spec: 'North America', macro: 'America' },
+        'Mexico': { spec: 'North America', macro: 'America' },
+        'Guatemala': { spec: 'North America', macro: 'America' },
+
+        // EUROPA
+        'Poland': { spec: 'Europe', macro: 'Europe' },
+        'Sweden': { spec: 'Europe', macro: 'Europe' },
+        'Kosovo': { spec: 'Europe', macro: 'Europe' },
+        'France': { spec: 'Europe', macro: 'Europe' },
+        'Estonia': { spec: 'Europe', macro: 'Europe' },
+        'United Kingdom': { spec: 'Europe', macro: 'Europe' },
+        'Latvia': { spec: 'Europe', macro: 'Europe' },
+        'Denmark': { spec: 'Europe', macro: 'Europe' },
+        'Slovakia': { spec: 'Europe', macro: 'Europe' },
+        'Finland': { spec: 'Europe', macro: 'Europe' },
+        'Bosnia and Herzegovina': { spec: 'Europe', macro: 'Europe' },
+        'North Macedonia': { spec: 'Europe', macro: 'Europe' },
+        'Turkey': { spec: 'Europe', macro: 'Europe' }, // Turquia realocada para Europa
+        'Spain': { spec: 'Europe', macro: 'Europe' },
+        'Portugal': { spec: 'Europe', macro: 'Europe' },
+        'Germany': { spec: 'Europe', macro: 'Europe' },
+        'Norway': { spec: 'Europe', macro: 'Europe' },
+        'Lithuania': { spec: 'Europe', macro: 'Europe' },
+        'Romania': { spec: 'Europe', macro: 'Europe' },
+        'Croatia': { spec: 'Europe', macro: 'Europe' },
+        'Czechia': { spec: 'Europe', macro: 'Europe' },
+        'Bulgaria': { spec: 'Europe', macro: 'Europe' },
+        'Serbia': { spec: 'Europe', macro: 'Europe' },
+        'Montenegro': { spec: 'Europe', macro: 'Europe' },
+        'Hungary': { spec: 'Europe', macro: 'Europe' },
+        'Switzerland': { spec: 'Europe', macro: 'Europe' },
+        'Luxembourg': { spec: 'Europe', macro: 'Europe' },
+        'Georgia': { spec: 'Europe', macro: 'Europe' },
+        
+        // CIS (Comunidade dos Estados Independentes)
+        'Russia': { spec: 'CIS', macro: 'Europe' }, // Russo tradicionalmente joga no circuito Europeu
+        'Ukraine': { spec: 'CIS', macro: 'Europe' },
+        'Belarus': { spec: 'CIS', macro: 'Europe' },
+        'Kazakhstan': { spec: 'CIS', macro: 'Asia' },
+        'Uzbekistan': { spec: 'CIS', macro: 'Asia' },
+
+        // ORIENTE MÉDIO
+        'Israel': { spec: 'Middle East', macro: 'Europe' }, // Joga via rota de proximidade e ping com Europa
+        'Iraq': { spec: 'Middle East', macro: 'Asia' },
+        'United Arab Emirates': { spec: 'Middle East', macro: 'Asia' },
+
+        // ÁSIA
+        'Hong Kong': { spec: 'Asia', macro: 'Asia' },
+        'Malaysia': { spec: 'Asia', macro: 'Asia' },
+        'Mongolia': { spec: 'Asia', macro: 'Asia' },
+        'China': { spec: 'Asia', macro: 'Asia' },
+        'Thailand': { spec: 'Asia', macro: 'Asia' },
+        'India': { spec: 'Asia', macro: 'Asia' },
+        'South Korea': { spec: 'Asia', macro: 'Asia' },
+        'Singapore': { spec: 'Asia', macro: 'Asia' },
+
+        // OCEANIA
+        'Australia': { spec: 'Oceania', macro: 'Asia' }, // Austrália realocada para a Ásia por proximidade
+        
+        // ÁFRICA
+        'South Africa': { spec: 'Africa', macro: 'Europe' } // Ping mais favorável nos circuitos da Europa geralmente
+    };
+
+    function getRegionInfo(countryName) {
+        if (!countryName) return { spec: 'Desconhecido', macro: 'Desconhecido' };
+        let c = countryName.trim();
+        if (countryMap[c]) {
+            return countryMap[c];
+        }
+        return { spec: 'Outros', macro: 'Outros' };
+    }
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            
+            // Pega a primeira aba do arquivo
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Converte pra formato JSON (onde as colunas viram as chaves)
+            const jsonResult = XLSX.utils.sheet_to_json(worksheet);
+            processData(jsonResult);
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function processData(data) {
+        let specificGroups = {};
+        let macroGroups = {
+            'America': [],
+            'Europe': [],
+            'Asia': []
+        };
+
+        data.forEach(row => {
+            // Suporta variações no nome da coluna
+            let player = row['PlayerName'] || row['Player Name'] || row['Name'] || row['Jogador'];
+            let country = row['Country'] || row['País'];
+
+            // Se for uma linha vazia, pula
+            if (!player && !country) return;
+            if (!player) player = "Sem Nome";
+            
+            const regions = getRegionInfo(country);
+            
+            // Adiciona no Grupo Específico (Parte 1)
+            if (!specificGroups[regions.spec]) {
+                specificGroups[regions.spec] = [];
+            }
+            specificGroups[regions.spec].push({ name: player, country: country });
+
+            // Adiciona no Grupo Macro (Parte 2)
+            if (macroGroups[regions.macro]) {
+                macroGroups[regions.macro].push({ name: player, country: country });
+            } else {
+                if (!macroGroups['Outros']) macroGroups['Outros'] = [];
+                macroGroups['Outros'].push({ name: player, country: country });
+            }
+        });
+
+        renderGroup('part1', specificGroups);
+        renderGroup('part2', macroGroups);
+    }
+
+    function renderGroup(containerId, groupedData) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; // Limpa antes de renderizar
+
+        // Ordenar os nomes das regiões
+        const regionNames = Object.keys(groupedData).sort();
+
+        regionNames.forEach(regionName => {
+            const playersList = groupedData[regionName];
+            if (playersList.length === 0) return; // Ignora as regiões sem ninguém
+
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'region-group';
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'region-title';
+            titleDiv.innerHTML = `<span>${regionName}</span> <span class="badges">${playersList.length} Jogadores</span>`;
+
+            const contentDiv = document.createElement('div');
+            // Deixa aberto por padrão
+            contentDiv.className = 'region-content active';
+
+            // Comportamento de clique para abrir/fechar a lista
+            titleDiv.onclick = () => {
+                contentDiv.classList.toggle('active');
+            };
+
+            const ul = document.createElement('ul');
+            ul.className = 'player-list';
+
+            // Ordena os jogadores por nome em ordem alfabética para ficar arrumado
+            playersList.sort((a, b) => a.name.localeCompare(b.name));
+
+            playersList.forEach(p => {
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                li.innerHTML = `
+                    <span class="player-name">${p.name}</span>
+                    <span class="player-country">${p.country ? p.country : 'Sem País Definido'}</span>
+                `;
+                ul.appendChild(li);
+            });
+
+            contentDiv.appendChild(ul);
+            groupDiv.appendChild(titleDiv);
+            groupDiv.appendChild(contentDiv);
+
+            container.appendChild(groupDiv);
+        });
+        
+        // Mensagem de Feedback caso arquivo vazio
+        if(regionNames.length === 0) {
+            container.innerHTML = '<p style="color: red;">Nenhum jogador encontrado com as colunas PlayerName e Country.</p>';
+        }
+    }
+</script>
+
+</body>
+</html>
