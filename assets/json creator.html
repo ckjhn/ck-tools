@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de team_logo.json com Pré-visualização</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --hover-color: #45a049;
+            --bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --preview-size: 50px; /* Tamanho da pré-visualização */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eaeaea;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 650px;
+        }
+
+        h2, h3 {
+            color: #222;
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .btn-download {
+            background-color: #008CBA;
+            margin-top: 20px;
+        }
+        .btn-download:hover { background-color: #007bb5; }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: #eee;
+            margin: 25px 0;
+        }
+
+        .team-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .team-item {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .team-info {
+            display: flex;
+            align-items: center; /* Alinha o logo e o texto verticalmente */
+            flex-grow: 1; /* Ocupa o espaço disponível */
+            margin-right: 15px;
+        }
+
+        /* Nova classe para a pré-visualização do logo */
+        .team-logo-preview {
+            width: var(--preview-size);
+            height: var(--preview-size);
+            object-fit: contain; /* Garante que a imagem caiba sem distorcer, mantendo a proporção */
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white; /* Fundo branco para imagens transparentes */
+            margin-right: 15px; /* Espaço entre o logo e o texto */
+            display: block; /* Evita espaços em branco extras */
+        }
+
+        .team-text-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .team-name { font-weight: bold; font-size: 1.1em; }
+        .team-logo-path { font-size: 0.8em; color: #666; word-break: break-all; } /* Quebra caminhos longos */
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .actions button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .btn-edit { background-color: #ff9800; color: white; }
+        .btn-edit:hover { background-color: #e68a00; }
+        
+        .btn-delete { background-color: #f44336; color: white; }
+        .btn-delete:hover { background-color: #da190b; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Gerenciador de Logos (JSON)</h2>
+
+        <div class="form-group">
+            <label for="fileInput">📁 Importar team_logo.json (Opcional):</label>
+            <input type="file" id="fileInput" accept=".json">
+        </div>
+
+        <hr>
+
+        <h3 id="formTitle">Adicionar Novo Time</h3>
+        <div class="form-group">
+            <label for="teamName">Nome do Time:</label>
+            <input type="text" id="teamName" placeholder="Ex: Lux Tenebris">
+        </div>
+        <div class="form-group">
+            <label for="teamLogo">Caminho ou URL do Logo:</label>
+            <input type="text" id="teamLogo" placeholder="Ex: assets/logos/lux_tenebris.png ou https://example.com/logo.png">
+        </div>
+        <input type="hidden" id="editIndex" value="-1">
+        <button class="btn" onclick="saveTeam()" id="saveBtn">Salvar Time</button>
+
+        <hr>
+
+        <h3>Lista de Times</h3>
+        <ul class="team-list" id="teamList">
+            </ul>
+
+        <button class="btn btn-download" onclick="downloadJSON()">💾 Baixar team_logo.json</button>
+    </div>
+
+    <script>
+        let teams = [];
+
+        // Elementos do DOM
+        const fileInput = document.getElementById('fileInput');
+        const teamNameInput = document.getElementById('teamName');
+        const teamLogoInput = document.getElementById('teamLogo');
+        const editIndexInput = document.getElementById('editIndex');
+        const teamListElement = document.getElementById('teamList');
+        const formTitle = document.getElementById('formTitle');
+        const saveBtn = document.getElementById('saveBtn');
+
+        // Carregar JSON do arquivo
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const parsedData = JSON.parse(event.target.result);
+                    if (Array.isArray(parsedData)) {
+                        teams = parsedData;
+                        renderList();
+                        alert("JSON carregado com sucesso!");
+                    } else {
+                        alert("O arquivo JSON não está no formato esperado (Array de objetos).");
+                    }
+                } catch (error) {
+                    alert("Erro ao ler o arquivo JSON. Certifique-se de que é um JSON válido.");
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Função para atualizar a visualização da lista
+        function renderList() {
+            teamListElement.innerHTML = '';
+            
+            if (teams.length === 0) {
+                teamListElement.innerHTML = '<p style="color: #777; font-size: 0.9em;">Nenhum time adicionado ainda.</p>';
+                return;
+            }
+
+            teams.forEach((team, index) => {
+                const li = document.createElement('li');
+                li.className = 'team-item';
+                
+                // Imagem de pré-visualização com fallback para erro
+                const logoHtml = `<img src="${team.logo}" alt="Logo ${team.name}" class="team-logo-preview" onerror="this.style.display='none'; this.nextElementSibling.style.marginLeft='0';">`;
+
+                li.innerHTML = `
+                    <div class="team-info">
+                        ${logoHtml}
+                        <div class="team-text-details">
+                            <span class="team-name">${team.name}</span>
+                            <span class="team-logo-path">${team.logo}</span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-edit" onclick="editTeam(${index})">Editar</button>
+                        <button class="btn-delete" onclick="deleteTeam(${index})">Excluir</button>
+                    </div>
+                `;
+                teamListElement.appendChild(li);
+            });
+        }
+
+        // Função para adicionar ou salvar edição
+        function saveTeam() {
+            const name = teamNameInput.value.trim();
+            const logo = teamLogoInput.value.trim();
+            const editIndex = parseInt(editIndexInput.value);
+
+            if (!name || !logo) {
+                alert("Por favor, preencha o nome e o logo do time.");
+                return;
+            }
+
+            const teamData = { name: name, logo: logo };
+
+            if (editIndex === -1) {
+                teams.push(teamData);
+            } else {
+                teams[editIndex] = teamData;
+                editIndexInput.value = "-1";
+                formTitle.textContent = "Adicionar Novo Time";
+                saveBtn.textContent = "Salvar Time";
+                saveBtn.style.backgroundColor = "var(--primary-color)";
+            }
+
+            teamNameInput.value = '';
+            teamLogoInput.value = '';
+            
+            renderList();
+        }
+
+        // Função para preparar formulário para edição
+        function editTeam(index) {
+            teamNameInput.value = teams[index].name;
+            teamLogoInput.value = teams[index].logo;
+            editIndexInput.value = index;
+            
+            formTitle.textContent = "Editando: " + teams[index].name;
+            saveBtn.textContent = "Atualizar Time";
+            saveBtn.style.backgroundColor = "#ff9800";
+        }
+
+        // Função para remover um time
+        function deleteTeam(index) {
+            if (confirm("Tem certeza que deseja excluir este time?")) {
+                teams.splice(index, 1);
+                
+                if (parseInt(editIndexInput.value) === index) {
+                    teamNameInput.value = '';
+                    teamLogoInput.value = '';
+                    editIndexInput.value = "-1";
+                    formTitle.textContent = "Adicionar Novo Time";
+                    saveBtn.textContent = "Salvar Time";
+                    saveBtn.style.backgroundColor = "var(--primary-color)";
+                }
+                
+                renderList();
+            }
+        }
+
+        // Função para exportar/baixar o JSON
+        function downloadJSON() {
+            if (teams.length === 0) {
+                alert("Não há times para exportar!");
+                return;
+            }
+
+            const dataStr = JSON.stringify(teams, null, 4);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "team_logo.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Renderiza a lista inicial
+        renderList();
+    </script>
+</body>
+</html>

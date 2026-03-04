@@ -31,6 +31,9 @@ let historyData = [];
 let paFilteredTeam = '';
 let paFilteredOpponent = '';
 
+/* Team logos */
+let teamLogosMap = {};
+
 /* Dashboard state */
 let dashSortDesc = true;
 
@@ -177,6 +180,38 @@ const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 const escHtml = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;')
   .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/* ════════════════════════════════════════
+   TEAM LOGOS
+════════════════════════════════════════ */
+const TEAM_LOGO_URL = 'assets/team_logo.json';
+
+async function loadTeamLogos() {
+  try {
+    const res = await fetch(TEAM_LOGO_URL, { cache: 'no-store' });
+    if (!res.ok) { console.warn('team_logo.json not found (' + res.status + ')'); return; }
+    const arr = await res.json();
+    if (!Array.isArray(arr)) return;
+    arr.forEach(entry => {
+      if (entry.name && entry.logo) {
+        teamLogosMap[entry.name.trim().toLowerCase()] = entry.logo.trim();
+      }
+    });
+    console.log(`Loaded ${Object.keys(teamLogosMap).length} team logo(s).`);
+  } catch (e) { console.warn('Failed to load team logos:', e); }
+}
+
+function getTeamLogoUrl(teamName) {
+  if (!teamName) return '';
+  return teamLogosMap[teamName.trim().toLowerCase()] || '';
+}
+
+function teamLogoImgHtml(teamName, sizeClass) {
+  const url = getTeamLogoUrl(teamName);
+  if (!url) return '';
+  const cls = sizeClass || 'team-logo-sm';
+  return `<img class="team-logo ${cls}" src="${escHtml(url)}" alt="" loading="lazy" onerror="this.style.display='none'">`;
+}
 
 /* ════════════════════════════════════════
    EXCEL LOADING
@@ -327,11 +362,12 @@ function rankBadgeHtml(p) {
 }
 
 function teamNameHtml(n, p) {
-  if (p === 1) return `<span class="team-name-animated team-name-1">${escHtml(n)}</span>`;
-  if (p === 2) return `<span class="team-name-animated team-name-2">${escHtml(n)}</span>`;
-  if (p === 3) return `<span class="team-name-animated team-name-3">${escHtml(n)}</span>`;
-  if (p <= 10) return `<span class="team-name-animated team-name-top">${escHtml(n)}</span>`;
-  return `<span class="team-name-default">${escHtml(n)}</span>`;
+  const logo = teamLogoImgHtml(n, 'team-logo-sm');
+  if (p === 1) return `<span class="team-name-with-logo"><span class="team-name-animated team-name-1">${logo}${escHtml(n)}</span></span>`;
+  if (p === 2) return `<span class="team-name-with-logo"><span class="team-name-animated team-name-2">${logo}${escHtml(n)}</span></span>`;
+  if (p === 3) return `<span class="team-name-with-logo"><span class="team-name-animated team-name-3">${logo}${escHtml(n)}</span></span>`;
+  if (p <= 10) return `<span class="team-name-with-logo"><span class="team-name-animated team-name-top">${logo}${escHtml(n)}</span></span>`;
+  return `<span class="team-name-with-logo"><span class="team-name-default">${logo}${escHtml(n)}</span></span>`;
 }
 
 function rowClass(p) {
@@ -710,7 +746,7 @@ function renderLegendsTable() {
     const bc = reg === 'AM' ? 'badge-AM' : reg === 'EU' ? 'badge-EU' : reg.includes('AS') ? 'badge-AS' : '';
     const badge = bc ? `<span class="badge ${bc}">${escHtml(reg)}</span>` : escHtml(reg);
     const rk = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
-    html += `<tr class="${cls}"><td>${rk}</td><td style="font-weight:700">${escHtml((r[idxTeam] || '').toString())}</td><td>${badge}</td><td class="right" style="font-weight:800">${num(r[idxPts]).toFixed(2)}</td></tr>`;
+    html += `<tr class="${cls}"><td>${rk}</td><td style="font-weight:700"><span class="team-name-with-logo">${teamLogoImgHtml((r[idxTeam] || '').toString(), 'team-logo-sm')}${escHtml((r[idxTeam] || '').toString())}</span></td><td>${badge}</td><td class="right" style="font-weight:800">${num(r[idxPts]).toFixed(2)}</td></tr>`;
   });
   html += '</tbody>';
   table.innerHTML = html; table.style.display = 'table';
@@ -847,14 +883,18 @@ function renderMatchPredictor() {
   const aM = computeDelta(aOP, aNPos), bM = computeDelta(bOP, bNPos), aPD = computePointsDiff(ra, aNP), bPD = computePointsDiff(rb, bNP);
 
   vm.style.display = '';
-  $('#vsAName').textContent = a.team; $('#vsBName').textContent = b.team;
+  const vsALogoHtml = teamLogoImgHtml(a.team, 'team-logo-md');
+  const vsBLogoHtml = teamLogoImgHtml(b.team, 'team-logo-md');
+  $('#vsAName').innerHTML = vsALogoHtml + escHtml(a.team);
+  $('#vsBName').innerHTML = vsBLogoHtml + escHtml(b.team);
   $('#vsAPts').textContent = ptsFmt(ra); $('#vsBPts').textContent = ptsFmt(rb);
   const aProb = Math.round(ea * 100), bProb = 100 - aProb;
   $('#vsAProb').textContent = aProb + '%'; $('#vsBProb').textContent = bProb + '%';
   $('#vsProbBarA').style.width = aProb + '%'; $('#vsProbBarB').style.width = bProb + '%';
 
   function mkRow(team, oP, nP, pts, streak, pd, mv, newPts) {
-    return `<tr><td>${rankBadgeHtml(oP)}</td><td>${escHtml(team.team)}</td><td class="right mono">${ptsFmt(pts)}</td><td class="right">${streakHtml(streak)}</td><td class="right"><span class="delta ${pd.cls}">${pd.text}</span></td><td class="right mono">${ptsFmt(newPts)}</td><td class="right"><span class="delta ${mv.cls}">${mv.text}</span></td><td class="right mono text-xs text-muted">${oP} → ${nP}</td></tr>`;
+    const logo = teamLogoImgHtml(team.team, 'team-logo-sm');
+    return `<tr><td>${rankBadgeHtml(oP)}</td><td><span class="team-name-with-logo">${logo}${escHtml(team.team)}</span></td><td class="right mono">${ptsFmt(pts)}</td><td class="right">${streakHtml(streak)}</td><td class="right"><span class="delta ${pd.cls}">${pd.text}</span></td><td class="right mono">${ptsFmt(newPts)}</td><td class="right"><span class="delta ${mv.cls}">${mv.text}</span></td><td class="right mono text-xs text-muted">${oP} → ${nP}</td></tr>`;
   }
   tb.innerHTML = mkRow(a, aOP, aNPos, ra, aNS, aPD, aM, aNP) + mkRow(b, bOP, bNPos, rb, bNS, bPD, bM, bNP);
   const winner = result === 'A' ? a.team : b.team;
@@ -1530,7 +1570,7 @@ function runH2hAnalysis() {
   // Header
   html += `<div class="h2h-header">
     <div class="h2h-team-card h2h-team-a">
-      <div class="h2h-team-name">${escHtml(nameA)}</div>
+      <div class="h2h-team-name"><span class="team-name-with-logo">${teamLogoImgHtml(nameA, 'team-logo-lg')}${escHtml(nameA)}</span></div>
       <div class="h2h-team-record">${statsA.wins}W — ${statsA.losses}L${selectedMap ? ' on ' + escHtml(selectedMap) : ''}</div>
       <div class="h2h-team-wr">${statsA.wr}% WR</div>
     </div>
@@ -1540,7 +1580,7 @@ function runH2hAnalysis() {
       <div class="h2h-vs-sub">${h2hMatches.length} H2H match${h2hMatches.length !== 1 ? 'es' : ''}${selectedMap ? ' on ' + escHtml(selectedMap) : ''}</div>
     </div>
     <div class="h2h-team-card h2h-team-b">
-      <div class="h2h-team-name">${escHtml(nameB)}</div>
+      <div class="h2h-team-name"><span class="team-name-with-logo">${teamLogoImgHtml(nameB, 'team-logo-lg')}${escHtml(nameB)}</span></div>
       <div class="h2h-team-record">${statsB.wins}W — ${statsB.losses}L${selectedMap ? ' on ' + escHtml(selectedMap) : ''}</div>
       <div class="h2h-team-wr">${statsB.wr}% WR</div>
     </div>
@@ -3110,6 +3150,8 @@ document.getElementById('btnClearEvFilters').addEventListener('click', () => {
    AUTO-LOAD
 ════════════════════════════════════════ */
 (async () => {
+  try { await loadTeamLogos(); }
+  catch (e) { console.warn('Team logos load failed:', e); }
   try { await loadAll(false); }
   catch (e) { console.error(e); setStatus('Auto-load failed. Ensure /file/*.xlsx exists.', 'err'); }
   try { await loadEventsJson(); }
