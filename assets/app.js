@@ -362,7 +362,7 @@ function rankBadgeHtml(p) {
 }
 
 function teamNameHtml(n, p) {
-  const logo = teamLogoImgHtml(n, 'team-logo-sm');
+  const logo = teamLogoImgHtml(n, 'team-logo-md');
   if (p === 1) return `<span class="team-name-with-logo"><span class="team-name-animated team-name-1">${logo}${escHtml(n)}</span></span>`;
   if (p === 2) return `<span class="team-name-with-logo"><span class="team-name-animated team-name-2">${logo}${escHtml(n)}</span></span>`;
   if (p === 3) return `<span class="team-name-with-logo"><span class="team-name-animated team-name-3">${logo}${escHtml(n)}</span></span>`;
@@ -746,7 +746,7 @@ function renderLegendsTable() {
     const bc = reg === 'AM' ? 'badge-AM' : reg === 'EU' ? 'badge-EU' : reg.includes('AS') ? 'badge-AS' : '';
     const badge = bc ? `<span class="badge ${bc}">${escHtml(reg)}</span>` : escHtml(reg);
     const rk = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
-    html += `<tr class="${cls}"><td>${rk}</td><td style="font-weight:700"><span class="team-name-with-logo">${teamLogoImgHtml((r[idxTeam] || '').toString(), 'team-logo-sm')}${escHtml((r[idxTeam] || '').toString())}</span></td><td>${badge}</td><td class="right" style="font-weight:800">${num(r[idxPts]).toFixed(2)}</td></tr>`;
+    html += `<tr class="${cls}"><td>${rk}</td><td style="font-weight:700"><span class="team-name-with-logo">${teamLogoImgHtml((r[idxTeam] || '').toString(), 'team-logo-md')}${escHtml((r[idxTeam] || '').toString())}</span></td><td>${badge}</td><td class="right" style="font-weight:800">${num(r[idxPts]).toFixed(2)}</td></tr>`;
   });
   html += '</tbody>';
   table.innerHTML = html; table.style.display = 'table';
@@ -883,8 +883,8 @@ function renderMatchPredictor() {
   const aM = computeDelta(aOP, aNPos), bM = computeDelta(bOP, bNPos), aPD = computePointsDiff(ra, aNP), bPD = computePointsDiff(rb, bNP);
 
   vm.style.display = '';
-  const vsALogoHtml = teamLogoImgHtml(a.team, 'team-logo-md');
-  const vsBLogoHtml = teamLogoImgHtml(b.team, 'team-logo-md');
+  const vsALogoHtml = teamLogoImgHtml(a.team, 'team-logo-lg');
+  const vsBLogoHtml = teamLogoImgHtml(b.team, 'team-logo-lg');
   $('#vsAName').innerHTML = vsALogoHtml + escHtml(a.team);
   $('#vsBName').innerHTML = vsBLogoHtml + escHtml(b.team);
   $('#vsAPts').textContent = ptsFmt(ra); $('#vsBPts').textContent = ptsFmt(rb);
@@ -893,7 +893,7 @@ function renderMatchPredictor() {
   $('#vsProbBarA').style.width = aProb + '%'; $('#vsProbBarB').style.width = bProb + '%';
 
   function mkRow(team, oP, nP, pts, streak, pd, mv, newPts) {
-    const logo = teamLogoImgHtml(team.team, 'team-logo-sm');
+    const logo = teamLogoImgHtml(team.team, 'team-logo-md');
     return `<tr><td>${rankBadgeHtml(oP)}</td><td><span class="team-name-with-logo">${logo}${escHtml(team.team)}</span></td><td class="right mono">${ptsFmt(pts)}</td><td class="right">${streakHtml(streak)}</td><td class="right"><span class="delta ${pd.cls}">${pd.text}</span></td><td class="right mono">${ptsFmt(newPts)}</td><td class="right"><span class="delta ${mv.cls}">${mv.text}</span></td><td class="right mono text-xs text-muted">${oP} → ${nP}</td></tr>`;
   }
   tb.innerHTML = mkRow(a, aOP, aNPos, ra, aNS, aPD, aM, aNP) + mkRow(b, bOP, bNPos, rb, bNS, bPD, bM, bNP);

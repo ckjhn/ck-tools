@@ -3136,20 +3136,20 @@ canvas { width: 100% !important; }
 }
 
 .team-logo-sm {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   margin-right: 6px;
 }
 
 .team-logo-md {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   margin-right: 8px;
 }
 
 .team-logo-lg {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   margin-right: 10px;
 }
 
