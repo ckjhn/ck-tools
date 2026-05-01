@@ -1,24 +1,23 @@
 OLD.xlsx
-Stage 2 [1:0] [0:1] - 28/02/26
-
+Stage 2 [2:0] [1:1] [0:2]
 
 ranking.xlsx
-Stage 2 [2:0] [1:1] [0:2] - 21/03/2026
+Stage 2 [2:1] [1:2]
 
 
 RANKINGS:
-ranking 0 [Season 0] : Base - ?
-ranking 1 [Season 0] : America Open Qualifier - ?
-ranking 2 [Season 0] : Europe Open Qualifier - ?
-ranking 3 [Season 0] : Asia Open Qualifier - ?
-ranking 4 [Season 0] : Americas RMRs - ?
-ranking 5 [Season 0] : Europe RMRs - ?
-ranking 6 [Season 0] : Asia RMRs - ?
-ranking 7 [Season 0] : Second Chance RMR - ?
-ranking 8 [Season 0] : Global RMR - ?
-ranking 9 [Season 0] : Stage 1 - ?
-ranking 10 [Season 0] : Stage 2 [0:0] - ?
-ranking 11 [Season 0] : 
+ranking 0 [Season 0] : Base
+ranking 1 [Season 0] : America Open Qualifier
+ranking 2 [Season 0] : Europe Open Qualifier
+ranking 3 [Season 0] : Asia Open Qualifier
+ranking 4 [Season 0] : Americas RMRs
+ranking 5 [Season 0] : Europe RMRs
+ranking 6 [Season 0] : Asia RMRs
+ranking 7 [Season 0] : Second Chance RMR
+ranking 8 [Season 0] : Global RMR
+ranking 9 [Season 0] : Stage 1
+ranking 10 [Season 0] : Stage 2 [0:0]
+ranking 11 [Season 0] : Stage 2 [1:0] [0:1]
 ranking 12 [Season 0] : 
 ranking n [Season 0] : 
 ranking n [Season 0] : 
