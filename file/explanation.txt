@@ -1,8 +1,8 @@
 OLD.xlsx
-Stage 2 [2:0] [1:1] [0:2]
+Stage 2 [2:1] [1:2]
 
 ranking.xlsx
-Stage 2 [2:1] [1:2]
+Stage 2 [2:2]
 
 
 RANKINGS:
@@ -18,7 +18,7 @@ ranking 8 [Season 0] : Global RMR
 ranking 9 [Season 0] : Stage 1
 ranking 10 [Season 0] : Stage 2 [0:0]
 ranking 11 [Season 0] : Stage 2 [1:0] [0:1]
-ranking 12 [Season 0] : 
+ranking 12 [Season 0] : Stage 2 [2:0] [1:1] [0:2]
 ranking n [Season 0] : 
 ranking n [Season 0] : 
 ranking n [Season 0] : 
