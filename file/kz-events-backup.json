@@ -168,5 +168,515 @@
         ""
       ]
     }
+  },
+  {
+    "name": "FiReLEAGUE Buenos Aires 2026",
+    "driveLink": "https://docs.google.com/spreadsheets/d/1S5MVm_UU4S59HTqiLZx8JdHWo7WOGzEf/edit?gid=1373778110#gid=1373778110",
+    "prizePool": "$8,000",
+    "logo": "",
+    "trophy": "",
+    "city": "Buenos Aires",
+    "country": "Argentina",
+    "flag": "https://flagcdn.com/h20/ar.png",
+    "teamCount": 16,
+    "stars": 1,
+    "major": "no",
+    "region": "americas",
+    "status": "Live",
+    "stage": "",
+    "nextMatch1": "",
+    "nextMatch2": "",
+    "nextMatch3": "",
+    "winner": "",
+    "second": "",
+    "mvp": "",
+    "evp": "",
+    "vp": "",
+    "prizeDistribution": {
+      "1st": "",
+      "2nd": "",
+      "3rd-4th": "",
+      "5th-8th": "",
+      "9th-11th": "",
+      "12th-16th": "",
+      "17th-24th": ""
+    },
+    "playerPrizes": {
+      "mvp": "",
+      "evp": "",
+      "vp": ""
+    },
+    "playoffTeams": [
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      }
+    ],
+    "playoffBracket": {
+      "qf": [
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        }
+      ],
+      "sf": [
+        {
+          "team1": "",
+          "team2": "",
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "team1": "",
+          "team2": "",
+          "score1": "",
+          "score2": ""
+        }
+      ],
+      "final": {
+        "team1": "",
+        "team2": "",
+        "score1": "",
+        "score2": ""
+      }
+    },
+    "playoffPlayers": {
+      "Team 1": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 2": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 3": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 4": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 5": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 6": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 7": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 8": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    }
+  },
+  {
+    "name": "Fragadelphia 2026",
+    "driveLink": "https://docs.google.com/spreadsheets/d/1MfhtMEAn-usXB3Hd0S5fwV9oEH0zvjLH/edit?gid=1871405447#gid=1871405447",
+    "prizePool": "$8,000",
+    "logo": "",
+    "trophy": "",
+    "city": "Singapore",
+    "country": "Singapore",
+    "flag": "https://flagcdn.com/h20/sg.png",
+    "teamCount": 8,
+    "stars": 1,
+    "major": "no",
+    "region": "asia",
+    "status": "Live",
+    "stage": "",
+    "nextMatch1": "",
+    "nextMatch2": "",
+    "nextMatch3": "",
+    "winner": "",
+    "second": "",
+    "mvp": "",
+    "evp": "",
+    "vp": "",
+    "prizeDistribution": {
+      "1st": "",
+      "2nd": "",
+      "3rd-4th": "",
+      "5th-8th": "",
+      "9th-11th": "",
+      "12th-16th": "",
+      "17th-24th": ""
+    },
+    "playerPrizes": {
+      "mvp": "",
+      "evp": "",
+      "vp": ""
+    },
+    "playoffTeams": [
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      }
+    ],
+    "playoffBracket": {
+      "qf": [
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        }
+      ],
+      "sf": [
+        {
+          "team1": "",
+          "team2": "",
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "team1": "",
+          "team2": "",
+          "score1": "",
+          "score2": ""
+        }
+      ],
+      "final": {
+        "team1": "",
+        "team2": "",
+        "score1": "",
+        "score2": ""
+      }
+    },
+    "playoffPlayers": {
+      "Team 1": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 2": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 3": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 4": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 5": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 6": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 7": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 8": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    }
+  },
+  {
+    "name": "Winamax Spanish Cirtuit  2026",
+    "driveLink": "https://docs.google.com/spreadsheets/d/1qQudDVcga_1-fGF3oC_oD8E8X6Cqoo1j/edit?gid=1871405447#gid=1871405447",
+    "prizePool": "$8,000",
+    "logo": "",
+    "trophy": "",
+    "city": "Valencia",
+    "country": "Spain",
+    "flag": "https://flagcdn.com/h20/es.png",
+    "teamCount": 0,
+    "stars": 1,
+    "major": "no",
+    "region": "europe",
+    "status": "Live",
+    "stage": "",
+    "nextMatch1": "",
+    "nextMatch2": "",
+    "nextMatch3": "",
+    "winner": "",
+    "second": "",
+    "mvp": "",
+    "evp": "",
+    "vp": "",
+    "prizeDistribution": {
+      "1st": "",
+      "2nd": "",
+      "3rd-4th": "",
+      "5th-8th": "",
+      "9th-11th": "",
+      "12th-16th": "",
+      "17th-24th": ""
+    },
+    "playerPrizes": {
+      "mvp": "",
+      "evp": "",
+      "vp": ""
+    },
+    "playoffTeams": [
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      },
+      {
+        "name": "",
+        "logo": ""
+      }
+    ],
+    "playoffBracket": {
+      "qf": [
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "score1": "",
+          "score2": ""
+        }
+      ],
+      "sf": [
+        {
+          "team1": "",
+          "team2": "",
+          "score1": "",
+          "score2": ""
+        },
+        {
+          "team1": "",
+          "team2": "",
+          "score1": "",
+          "score2": ""
+        }
+      ],
+      "final": {
+        "team1": "",
+        "team2": "",
+        "score1": "",
+        "score2": ""
+      }
+    },
+    "playoffPlayers": {
+      "Team 1": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 2": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 3": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 4": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 5": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 6": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 7": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Team 8": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    }
   }
 ]
