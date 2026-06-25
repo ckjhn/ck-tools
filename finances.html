@@ -440,6 +440,9 @@ body::before {
 .btn-purple { background: var(--purple); color: #fff; border-color: var(--purple); }
 .btn-purple:hover { background: transparent; color: var(--purple); }
 
+.btn-yellow { background: var(--yellow); color: #000; border-color: var(--yellow); }
+.btn-yellow:hover { background: transparent; color: var(--yellow); }
+
 .btn-sm { padding: 5px 10px; font-size: 10px; letter-spacing: 1px; }
 .btn-full { width: 100%; text-align: center; }
 .btn-row { display: flex; gap: 8px; }
@@ -1407,21 +1410,35 @@ body::before {
             <div class="form-group">
               <div class="form-label">TIER</div>
               <select class="nx-select" id="perf-tier">
-                <option value="region">Regional (10k)</option>
-                <option value="global">Global (20k)</option>
-                <option value="major">Major (50k)</option>
+                <option value="ss">Tier SS ⭐⭐⭐⭐⭐ — Major Only (50k)</option>
+                <option value="s">Tier S ⭐⭐⭐⭐ (40k)</option>
+                <option value="a">Tier A ⭐⭐⭐ (30k)</option>
+                <option value="b">Tier B ⭐⭐ (20k)</option>
+                <option value="c">Tier C ⭐ (15k)</option>
               </select>
             </div>
             <div class="form-group">
               <div class="form-label">AWARD</div>
               <select class="nx-select" id="perf-type">
-                <option value="mvp">🥇 MVP</option>
-                <option value="evp">🥈 EVP</option>
-                <option value="vp">🥉 VP</option>
+                <option value="mvp">🥇 MVP (35%)</option>
+                <option value="evp">🥈 EVP (25%)</option>
+                <option value="vp">🥉 VP (15%)</option>
               </select>
             </div>
           </div>
           <button class="btn btn-cyan btn-full" onclick="applyIndividualPerformance()">GRANT AWARD + MEDAL</button>
+
+          <hr class="sep">
+
+          <div class="card-title" style="margin-top:4px;">👑 MAJOR CHAMPION</div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <div class="form-label">WINNING TEAM (ACTIVE ROSTER)</div>
+            <select class="nx-select" id="major-team-select"></select>
+          </div>
+          <div class="alert-item info" style="margin-bottom:10px; font-size:11px; font-family:var(--font-data);">
+            Trophy only — no prize money. Awards +1 🏆 Major Trophy to all 5 starters on the active roster.
+          </div>
+          <button class="btn btn-yellow btn-full" onclick="applyMajorTrophy()">👑 CROWN MAJOR CHAMPION</button>
         </div>
 
         <!-- INTERVENTIONS -->
@@ -1737,6 +1754,7 @@ function normalizePlayers(arr) {
     row['Total EVP'] = Number(row['Total EVP']) || 0;
     row['Total VP'] = Number(row['Total VP']) || 0;
     row['Total Titles'] = Number(row['Total Titles']) || 0;
+    row['Major Winner'] = Number(row['Major Winner']) || 0;
     row['Previous MV'] = Number(row['Previous MV']) || 0;
     row.ContractMonths = Number(row.ContractMonths || row['ContractMonths']) || 0;
     row.Country = String(row.Country || row['Country'] || '').trim();
@@ -2370,6 +2388,7 @@ function medals(p) {
   if (p.EVP) s+=`<span class="badge badge-ghost">🥈${p.EVP}</span> `;
   if (p.VP) s+=`<span class="badge badge-ghost">🥉${p.VP}</span> `;
   if (p.Titles) s+=`<span class="badge badge-cyan">🏆${p.Titles}</span> `;
+  if (p['Major Winner']) s+=`<span class="badge badge-yellow" style="border:1px solid #00000033;">👑${p['Major Winner']}</span> `;
   return s;
 }
 
@@ -2402,6 +2421,12 @@ function openPlayerProfile(name) {
         <div class="pm-sub">${p.TeamName==='none'?'FREE AGENT':`${getTeamLogo(p.TeamName, 16)} ${p.TeamName}`} • ${p.Role} • Contract: ${p.ContractMonths||0}m${p.Country ? ' • '+p.Country : ''} ${medals(p)}</div>
       </div>
       <div class="pm-body">
+
+        ${(p['Major Winner']||0) > 0 ? `
+        <div style="text-align:center; padding:10px; margin-bottom:16px; background:var(--yellow)15; border:1px solid var(--yellow)55; border-radius:6px; font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--yellow); letter-spacing:1px;">
+          👑 ${p['Major Winner']}x - Times Major Winner
+        </div>
+        ` : ''}
 
         <!-- FINANCIAL -->
         <div class="pm-section-title">FINANCIAL OVERVIEW</div>
@@ -2481,6 +2506,7 @@ function populateDropdowns() {
   const opts = finances.map(t=>`<option value="${t.TeamName}">${t.TeamName}</option>`).join('');
   $('tourney-team-select').innerHTML = opts;
   $('reset-team-select').innerHTML = opts;
+  $('major-team-select').innerHTML = opts;
   const mktOpts = `<option value="all">All Teams</option><option value="my_roster">🛡 My Roster</option><option value="offers">🔥 On Sale</option>` + opts;
   $('market-team-filter').innerHTML = mktOpts;
   const dashSel = $('dash-team-select');
@@ -3329,13 +3355,24 @@ function applyIndividualPerformance() {
   if (!p) return;
   saveState();
   const type=$('perf-type').value;
-  const reward={region:{mvp:4000,evp:3500,vp:2500},global:{mvp:10000,evp:6000,vp:4000},major:{mvp:30000,evp:12500,vp:7500}}[$('perf-tier').value][type];
+  const pool={ss:50000, s:40000, a:30000, b:20000, c:15000}[$('perf-tier').value];
+  const pct={mvp:0.35, evp:0.25, vp:0.15}[type];
+  const reward=pool*pct;
   p.MarketValue=(p.MarketValue||0)+reward;
   p.PrizePool=(p.PrizePool||0)+reward;
   if (type==='mvp') p.MVP=(p.MVP||0)+1;
   else if (type==='evp') p.EVP=(p.EVP||0)+1;
   else p.VP=(p.VP||0)+1;
   addLog(`⭐ ${pName} awarded ${type.toUpperCase()} (+${fmt(reward)} MV & prize pool, medal granted).`,'good'); updateAll();
+}
+
+function applyMajorTrophy() {
+  const tName=$('major-team-select').value;
+  const starters=players.filter(p=>p.TeamName===tName && p.Role==='Starter');
+  if (!tName || !starters.length) return;
+  saveState();
+  starters.forEach(p=>{ p['Major Winner']=(p['Major Winner']||0)+1; });
+  addLog(`👑 ${tName} CROWNED MAJOR CHAMPION! All ${starters.length} active starters awarded a Major Trophy.`,'good'); updateAll();
 }
 
 /* ═══ MONTHLY CYCLE ═══ */
@@ -3418,7 +3455,8 @@ function exportExcels() {
     'Total VP': p['Total VP'] || 0,
     'Total Titles': p['Total Titles'] || 0,
     'Previous MV': p['Previous MV'] || 0,
-    'Country': p.Country || ''
+    'Country': p.Country || '',
+    'Major Winner': p['Major Winner'] || 0
   }));
   // Export finances preserving original column names
   const fData = finances.map(t => ({
