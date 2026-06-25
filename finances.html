@@ -1420,9 +1420,9 @@ body::before {
             <div class="form-group">
               <div class="form-label">AWARD</div>
               <select class="nx-select" id="perf-type">
-                <option value="mvp">🥇 MVP (35%)</option>
-                <option value="evp">🥈 EVP (25%)</option>
-                <option value="vp">🥉 VP (15%)</option>
+                <option value="mvp">🥇 MVP (33.33%)</option>
+                <option value="evp">🥈 EVP (23.81%)</option>
+                <option value="vp">🥉 VP (14.29%)</option>
               </select>
             </div>
           </div>
@@ -3356,7 +3356,7 @@ function applyIndividualPerformance() {
   saveState();
   const type=$('perf-type').value;
   const pool={ss:50000, s:40000, a:30000, b:20000, c:15000}[$('perf-tier').value];
-  const pct={mvp:0.35, evp:0.25, vp:0.15}[type];
+  const pct={mvp:35/105, evp:25/105, vp:15/105}[type];
   const reward=pool*pct;
   p.MarketValue=(p.MarketValue||0)+reward;
   p.PrizePool=(p.PrizePool||0)+reward;
