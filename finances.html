@@ -1141,6 +1141,7 @@ body::before {
           <div class="g2">
             <div class="card">
               <div class="card-title">👥 ACTIVE ROSTER</div>
+              <div id="cmd-missing-roles" style="margin-bottom:8px;"></div>
               <div id="cmd-roster" class="scroll-list" style="max-height:240px;"></div>
             </div>
             <div class="card yellow">
@@ -1181,9 +1182,9 @@ body::before {
             </div>
             <div class="g3" style="gap:10px; margin-bottom:10px;">
               <div class="form-group">
-                <div class="form-label">ROLE</div>
-                <select class="nx-select" id="market-filter" onchange="refreshMarket()">
-                  <option value="all">All Roles</option>
+                <div class="form-label">ROSTER</div>
+                <select class="nx-select" id="market-roster-filter" onchange="refreshMarket()">
+                  <option value="all">All</option>
                   <option value="none">🚫 Sem Time</option>
                   <option value="Bench">Benched</option>
                   <option value="Starter">Starters</option>
@@ -1223,6 +1224,20 @@ body::before {
                 <div class="form-label">🏳 COUNTRY</div>
                 <select class="nx-select" id="market-country-filter" onchange="refreshMarket()">
                   <option value="all">All Countries</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <div class="form-label">🎯 ROLE</div>
+                <select class="nx-select" id="market-role-filter" onchange="refreshMarket()">
+                  <option value="all">All Roles</option>
+                  <option value="awper">Awper</option>
+                  <option value="igl">IGL</option>
+                  <option value="support">Support</option>
+                  <option value="lurker">Lurker (TR)</option>
+                  <option value="entry fragger">Entry Fragger (TR)</option>
+                  <option value="rifler">Rifler (TR)</option>
+                  <option value="anchor">Anchor (CT)</option>
+                  <option value="rotator">Rotator (CT)</option>
                 </select>
               </div>
             </div>
@@ -1668,7 +1683,7 @@ function getCountryRegion(country) {
 }
 
 function getTeamRegion(teamName) {
-  const starters = players.filter(p => p.TeamName === teamName && p.Role === 'Starter');
+  const starters = players.filter(p => p.TeamName === teamName && p.Roster === 'Starter');
   if (!starters.length) return null;
   const counts = { 'Americas': 0, 'Europa': 0, 'Asia': 0 };
   starters.forEach(p => { const r = getCountryRegion(p.Country); if (r) counts[r]++; });
@@ -1732,6 +1747,27 @@ function handleXL(e, cb) {
   r.readAsBinaryString(e.target.files[0]);
 }
 
+/* ROLE (tactical position) catalog — distinct from Roster (Starter/Bench/no team) */
+const ROLE_OPTIONS = [
+  { value:'awper',         label:'Awper' },
+  { value:'igl',           label:'IGL' },
+  { value:'support',       label:'Support' },
+  { value:'lurker',        label:'Lurker (TR)' },
+  { value:'entry fragger', label:'Entry Fragger (TR)' },
+  { value:'rifler',        label:'Rifler (TR)' },
+  { value:'anchor',        label:'Anchor (CT)' },
+  { value:'rotator',       label:'Rotator (CT)' },
+];
+const ROLE_LABEL_BY_VALUE = Object.fromEntries(ROLE_OPTIONS.map(r => [r.value, r.label]));
+
+/* Splits a "awper|igl|support" string into a clean lowercase array */
+function parseRoleList(roleStr) {
+  return String(roleStr || '')
+    .split('|')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 /* Normalize column names from Excel → internal code names */
 function normalizePlayers(arr) {
   return arr.map(p => {
@@ -1744,6 +1780,11 @@ function normalizePlayers(arr) {
     // Mantém as chaves sem espaço caso alguma outra parte do código as utilize
     row.MarketValue = row['Market Value'];
     row.PrizePool = row['Prize Pool'];
+
+    // Roster = situação no time (Starter / Bench / no team). Role = função tática (Awper, IGL, etc — pode ter várias, separadas por |)
+    row.Roster = String(row.Roster || '').trim();
+    row.Role = String(row.Role || '').trim();
+    row.roleList = parseRoleList(row.Role);
     
     // Garante que todos os outros campos existam com valores padrão (removido o Prestige)
     row.MVP = Number(row.MVP || row['MVP']) || 0;
@@ -1873,8 +1914,8 @@ function runIntel() {
     const fins = getTeamFinances(team);
     const bank = team.CurrentBank || 0;
     const teamPlayers = players.filter(p => p.TeamName === tName);
-    const starters = teamPlayers.filter(p => p.Role === 'Starter').length;
-    const bench = teamPlayers.filter(p => p.Role === 'Bench').length;
+    const starters = teamPlayers.filter(p => p.Roster === 'Starter').length;
+    const bench = teamPlayers.filter(p => p.Roster === 'Bench').length;
     const expiring = teamPlayers.filter(p => p.ContractMonths <= 2).length;
     const avgForm = teamPlayers.length ? teamPlayers.reduce((s,p) => s + getFormScore(p), 0) / teamPlayers.length : 0;
     const topPlayer = [...teamPlayers].sort((a,b) => getFormScore(b) - getFormScore(a))[0];
@@ -1998,8 +2039,8 @@ function selectIntelTeam(name) {
     const fins = getTeamFinances(team);
     const bank = team.CurrentBank || 0;
     const teamPlayers = players.filter(p => p.TeamName === tName);
-    const starters = teamPlayers.filter(p => p.Role === 'Starter').length;
-    const bench = teamPlayers.filter(p => p.Role === 'Bench').length;
+    const starters = teamPlayers.filter(p => p.Roster === 'Starter').length;
+    const bench = teamPlayers.filter(p => p.Roster === 'Bench').length;
     const expiring = teamPlayers.filter(p => p.ContractMonths <= 2).length;
     const avgForm = teamPlayers.length ? teamPlayers.reduce((s,p) => s + getFormScore(p), 0) / teamPlayers.length : 0;
     const topPlayer = [...teamPlayers].sort((a,b) => getFormScore(b) - getFormScore(a))[0];
@@ -2275,7 +2316,7 @@ function getFormScore(p) {
 }
 
 function canAddBench(team) {
-  return players.filter(p => p.TeamName===team && p.Role==='Bench').length < 3;
+  return players.filter(p => p.TeamName===team && p.Roster==='Bench').length < 3;
 }
 
 function getTeamFinances(team) {
@@ -2298,8 +2339,8 @@ function getOracleScore(teamName) {
   if (!team) return {score:0, grade:'F', color:getComputedStyle(document.documentElement).getPropertyValue('--red').trim()};
   const fins = getTeamFinances(team);
   const bank = team.CurrentBank||0;
-  const starters = players.filter(p=>p.TeamName===teamName&&p.Role==='Starter').length;
-  const bench = players.filter(p=>p.TeamName===teamName&&p.Role==='Bench').length;
+  const starters = players.filter(p=>p.TeamName===teamName&&p.Roster==='Starter').length;
+  const bench = players.filter(p=>p.TeamName===teamName&&p.Roster==='Bench').length;
   const expiring = players.filter(p=>p.TeamName===teamName&&p.ContractMonths<=2).length;
   const totalPlayers = players.filter(p=>p.TeamName===teamName).length;
   const avgForm = totalPlayers ? players.filter(p=>p.TeamName===teamName).reduce((s,p)=>s+getFormScore(p),0)/totalPlayers : 0;
@@ -2345,7 +2386,7 @@ function getRiskIndex(teamName) {
   else if (bank < fins.salaries*2) risk += 15;
   const expiring = players.filter(p=>p.TeamName===teamName&&p.ContractMonths<=2).length;
   risk += expiring * 5;
-  const starters = players.filter(p=>p.TeamName===teamName&&p.Role==='Starter').length;
+  const starters = players.filter(p=>p.TeamName===teamName&&p.Roster==='Starter').length;
   risk += (5-starters)*8;
   return clamp(risk,0,100);
 }
@@ -2392,6 +2433,14 @@ function medals(p) {
   return s;
 }
 
+/* ROLE BADGES HTML — one chip per tactical role the player has (pipe-separated) */
+function roleBadges(p) {
+  const list = p.roleList && p.roleList.length ? p.roleList : parseRoleList(p.Role);
+  if (!list.length) return '';
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  return list.map(r => `<span class="badge badge-purple">${ROLE_LABEL_BY_VALUE[r] || cap(r)}</span>`).join(' ') + ' ';
+}
+
 /* PLAYER PROFILE MODAL */
 function openPlayerProfile(name) {
   const p = players.find(x => String(x.PlayerName) === name);
@@ -2418,7 +2467,8 @@ function openPlayerProfile(name) {
       <button class="pm-close" onclick="this.closest('.player-modal-overlay').remove()">&times;</button>
       <div class="pm-header">
         <div class="pm-name">${p.Country ? getCountryFlag(p.Country, 22)+' ' : ''}${String(p.PlayerName)}</div>
-        <div class="pm-sub">${p.TeamName==='none'?'FREE AGENT':`${getTeamLogo(p.TeamName, 16)} ${p.TeamName}`} • ${p.Role} • Contract: ${p.ContractMonths||0}m${p.Country ? ' • '+p.Country : ''} ${medals(p)}</div>
+        <div class="pm-sub">${p.TeamName==='none'?'FREE AGENT':`${getTeamLogo(p.TeamName, 16)} ${p.TeamName}`} • ${p.Roster} • Contract: ${p.ContractMonths||0}m${p.Country ? ' • '+p.Country : ''} ${medals(p)}</div>
+        <div class="pm-sub" style="margin-top:4px;">${roleBadges(p) || '<span style="color:var(--text-dim);">No role assigned</span>'}</div>
       </div>
       <div class="pm-body">
 
@@ -2615,8 +2665,8 @@ function updateCommand() {
   `;
 
   // Stats
-  const starters = players.filter(p=>p.TeamName===tName&&p.Role==='Starter').length;
-  const bench = players.filter(p=>p.TeamName===tName&&p.Role==='Bench').length;
+  const starters = players.filter(p=>p.TeamName===tName&&p.Roster==='Starter').length;
+  const bench = players.filter(p=>p.TeamName===tName&&p.Roster==='Bench').length;
   const months = salaries>0?(bank/salaries).toFixed(1):'∞';
   const teamRegion = getTeamRegion(tName);
   const rSty = teamRegion ? (REGION_STYLE[teamRegion] || {color:'var(--text-dim)',icon:'🌐'}) : null;
@@ -2641,13 +2691,19 @@ function updateCommand() {
   `;
 
   // Roster
+  const starterRoleSet = new Set(players.filter(p=>p.TeamName===tName&&p.Roster==='Starter').flatMap(p=>p.roleList||[]));
+  const missingRoles = ROLE_OPTIONS.filter(r => !starterRoleSet.has(r.value));
+  $('cmd-missing-roles').innerHTML = missingRoles.length
+    ? `<div style="font-family:var(--font-data); font-size:10px; color:var(--text-dim); margin-bottom:4px;">⚠ MISSING ROLES IN STARTING 5:</div><div>${missingRoles.map(r=>`<span class="badge badge-orange" style="margin-right:4px; margin-bottom:4px;">${r.label}</span>`).join('')}</div>`
+    : `<div style="font-family:var(--font-data); font-size:10px; color:var(--green);">✓ All tactical roles covered by starters.</div>`;
+
   const rosterHtml = players.filter(p=>p.TeamName===tName).map(p=>`
     <div class="list-row">
       <div>
         <div class="name" style="cursor:pointer; text-decoration:underline; text-decoration-color:var(--border); text-underline-offset:3px;" onclick="openPlayerProfile('${String(p.PlayerName).replace(/'/g,"\\'")}')">${p.Country?`<span title="${p.Country}" style="margin-right:4px;display:inline-flex;align-items:center;">${getCountryFlag(p.Country, 16)}</span>`:''}${String(p.PlayerName)}</div>
-        <div class="meta">${p.Role} • Contract: ${p.ContractMonths}m • ${fmt(p.MarketValue*0.10)}/mo ${medals(p)}</div>
+        <div class="meta">${p.Roster} • ${roleBadges(p)}Contract: ${p.ContractMonths}m • ${fmt(p.MarketValue*0.10)}/mo ${medals(p)}</div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="toggleRole('${String(p.PlayerName).replace(/'/g,"\\'")}')">🔄 ${p.Role==='Starter'?'BENCH':'START'}</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleRoster('${String(p.PlayerName).replace(/'/g,"\\'")}')">🔄 ${p.Roster==='Starter'?'BENCH':'START'}</button>
     </div>
   `).join('') || '<div style="color:var(--text-dim); padding:10px; font-size:12px;">No players on roster.</div>';
   $('cmd-roster').innerHTML = rosterHtml;
@@ -2810,7 +2866,7 @@ function updateLeague() {
   // Roster alerts
   let rHtml='';
   finances.forEach(t=>{
-    const starters=players.filter(p=>p.TeamName===t.TeamName&&p.Role==='Starter').length;
+    const starters=players.filter(p=>p.TeamName===t.TeamName&&p.Roster==='Starter').length;
     if (starters<5) rHtml+=`<div class="alert-item critical"><b>${getTeamLogo(t.TeamName,16)} ${t.TeamName}</b><span style="margin-left:auto; font-family:var(--font-data); color:var(--red);">${starters}/5 STARTERS</span></div>`;
   });
   if (!rHtml) rHtml='<div class="alert-item success">✓ All teams have 5 active starters.</div>';
@@ -2922,7 +2978,7 @@ function updateHotDealsList() {
 }
 
 function refreshMarket() {
-  const roleF=$('market-filter').value, teamF=$('market-team-filter').value, sortBy=$('market-sort').value;
+  const rosterF=$('market-roster-filter').value, roleF=$('market-role-filter').value, teamF=$('market-team-filter').value, sortBy=$('market-sort').value;
   const nameSearch=($('market-name-search').value||'').toLowerCase().trim();
   const activeTeam=$('dash-team-select').value;
   const bank=(finances.find(t=>t.TeamName===activeTeam)||{}).CurrentBank||0;
@@ -2950,7 +3006,8 @@ function refreshMarket() {
     return {...p, pn, isDisc, buyout, sal, six, totalTitles, totalMedals, prizePool};
   }).filter(p=>{
     if (teamF!=='my_roster'&&p.TeamName===activeTeam) return false;
-    const passRole=roleF==='all'||(roleF==='none'?p.TeamName==='none':p.Role===roleF);
+    const passRoster=rosterF==='all'||(rosterF==='none'?p.TeamName==='none':p.Roster===rosterF);
+    const passRolePos=roleF==='all'||(p.roleList||[]).includes(roleF);
     let passTeam=false;
     if (teamF==='all') passTeam=true;
     else if (teamF==='my_roster') passTeam=p.TeamName===activeTeam;
@@ -2963,7 +3020,7 @@ function refreshMarket() {
     const playerCountry=(p.Country||'').trim();
     const passRegion=regionF==='all'||getPlayerRegion(playerCountry)===regionF;
     const passCountry=countryF==='all'||playerCountry===countryF;
-    return passRole&&passTeam&&passRegion&&passCountry&&(nameSearch===''||p.pn.toLowerCase().includes(nameSearch))&&p.MarketValue>=mvMin&&p.MarketValue<=mvMax&&(p.ContractMonths||0)>=conMin&&(p.ContractMonths||0)<=conMax&&p.buyout>=buyMin&&p.buyout<=buyMax&&passTitles&&passMedals&&passPrize;
+    return passRoster&&passRolePos&&passTeam&&passRegion&&passCountry&&(nameSearch===''||p.pn.toLowerCase().includes(nameSearch))&&p.MarketValue>=mvMin&&p.MarketValue<=mvMax&&(p.ContractMonths||0)>=conMin&&(p.ContractMonths||0)<=conMax&&p.buyout>=buyMin&&p.buyout<=buyMax&&passTitles&&passMedals&&passPrize;
   });
 
   data.sort((a,b)=>{
@@ -2998,6 +3055,7 @@ function refreshMarket() {
           ${p.Country ? `<span title="${p.Country}" style="display:inline-flex;align-items:center;cursor:default;">${getCountryFlag(p.Country, 18)}</span>` : ''}
           <span class="name" style="cursor:pointer; text-decoration:underline; text-decoration-color:var(--border); text-underline-offset:3px;" onclick="event.stopPropagation(); openPlayerProfile('${p.pn.replace(/'/g,"\\'")}')">${p.pn}</span>
           <span style="color:var(--text-dim); font-size:11px; display:inline-flex; align-items:center; gap:3px;">${getTeamLogo(p.TeamName, 14)}[${p.TeamName}]</span>
+          ${roleBadges(p)}
           ${isHot?'<span class="badge badge-green">🔥 HOT</span>':''}
           ${p.isDisc?'<span class="badge badge-orange">ON SALE</span>':''}
           ${medals(p)}
@@ -3093,7 +3151,7 @@ function runComparison() {
           <span style="font-family:var(--font-display); font-size:14px; font-weight:700; color:${w?'var(--green)':'var(--text)'};">${String(a.p.PlayerName)}</span>
           ${w?'<span class="badge badge-green">RECOMMENDED ✓</span>':''}
         </div>
-        <div style="font-family:var(--font-data); font-size:10px; color:var(--text-dim); margin-bottom:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">${getTeamLogo(a.p.TeamName, 16)}[${a.p.TeamName}] • ${a.p.Role} • ${a.p.ContractMonths}m left ${medals(a.p)}</div>
+        <div style="font-family:var(--font-data); font-size:10px; color:var(--text-dim); margin-bottom:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">${getTeamLogo(a.p.TeamName, 16)}[${a.p.TeamName}] • ${a.p.Roster} • ${roleBadges(a.p)}${a.p.ContractMonths}m left ${medals(a.p)}</div>
 
         <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
           ${[
@@ -3191,7 +3249,7 @@ function buyFreeAgent(name) {
   if (!canAddBench(buyer)) return alert('Bench full (max 3).');
   const p=players.find(x=>String(x.PlayerName)===name);
   if (p&&confirm(`Sign ${name} as Free Agent on a ${months}m contract?`)) {
-    saveState(); p.TeamName=buyer; p.Role='Bench'; p.ContractMonths=months;
+    saveState(); p.TeamName=buyer; p.Roster='Bench'; p.ContractMonths=months;
     addLog(`✍ Signed FA: ${name} to ${buyer} (${months}m).`,'good'); updateAll();
   }
 }
@@ -3206,7 +3264,7 @@ function buyOffer(name, cost) {
   if (b.CurrentBank<cost) return alert('Insufficient funds.');
   saveState(); b.CurrentBank-=cost;
   const seller=finances.find(t=>t.TeamName===p.TeamName); if (seller) seller.CurrentBank+=cost;
-  p.TeamName=buyer; p.Role='Bench'; p.ContractMonths=months;
+  p.TeamName=buyer; p.Roster='Bench'; p.ContractMonths=months;
   delete temporaryOffers[name]; pendingTransfers=pendingTransfers.filter(o=>o.playerName!==name);
   addLog(`💸 ${buyer} bought ${name} for ${fmt(cost)}.`,'good'); updateAll();
 }
@@ -3234,7 +3292,7 @@ function acceptTransfer(id) {
   if (buyer.CurrentBank<o.amount) { alert(`${o.buyer} can no longer afford this!`); transferHistory.unshift({...o, status:'❌ REJECTED (BROKE)'}); pendingTransfers.splice(i,1); updateAll(); return; }
   if (!canAddBench(o.buyer)) return alert(`${o.buyer}'s bench is full.`);
   saveState(); buyer.CurrentBank-=o.amount; seller.CurrentBank+=o.amount;
-  p.TeamName=o.buyer; p.Role='Bench'; p.ContractMonths=o.months;
+  p.TeamName=o.buyer; p.Roster='Bench'; p.ContractMonths=o.months;
   transferHistory.unshift({...o, status:'✅ ACCEPTED'});
   pendingTransfers=pendingTransfers.filter(x=>x.playerName!==o.playerName);
   delete temporaryOffers[o.playerName];
@@ -3247,15 +3305,15 @@ function rejectTransfer(id) {
   addLog(`❌ Transfer rejected.`,'bad'); pendingTransfers.splice(i,1); updateAll();
 }
 
-/* ═══ TOGGLE ROLE ═══ */
-function toggleRole(name) {
+/* ═══ TOGGLE ROSTER (Starter/Bench) ═══ */
+function toggleRoster(name) {
   const p=players.find(x=>String(x.PlayerName)===name); if (!p) return;
-  if (p.Role==='Starter') {
-    if (players.filter(x=>x.TeamName===p.TeamName&&x.Role==='Bench').length>=3) return alert('Bench full (max 3).');
-    saveState(); p.Role='Bench'; addLog(`🔄 ${name} → Bench.`); updateAll();
+  if (p.Roster==='Starter') {
+    if (players.filter(x=>x.TeamName===p.TeamName&&x.Roster==='Bench').length>=3) return alert('Bench full (max 3).');
+    saveState(); p.Roster='Bench'; addLog(`🔄 ${name} → Bench.`); updateAll();
   } else {
-    if (players.filter(x=>x.TeamName===p.TeamName&&x.Role==='Starter').length>=5) return alert('Starters full (max 5).');
-    saveState(); p.Role='Starter'; addLog(`🔄 ${name} → Starter.`,'good'); updateAll();
+    if (players.filter(x=>x.TeamName===p.TeamName&&x.Roster==='Starter').length>=5) return alert('Starters full (max 5).');
+    saveState(); p.Roster='Starter'; addLog(`🔄 ${name} → Starter.`,'good'); updateAll();
   }
 }
 
@@ -3345,7 +3403,7 @@ function distributeTourneyPrize() {
   const awardTitle=$('tourney-award-title').checked;
   saveState(); team.CurrentBank+=amt*0.6;
   const share=amt*0.4/5;
-  players.filter(p=>p.TeamName===tName&&p.Role==='Starter').slice(0,5).forEach(p=>{ p.MarketValue+=share; p.PrizePool=(p.PrizePool||0)+share; if(awardTitle) p.Titles=(p.Titles||0)+1; });
+  players.filter(p=>p.TeamName===tName&&p.Roster==='Starter').slice(0,5).forEach(p=>{ p.MarketValue+=share; p.PrizePool=(p.PrizePool||0)+share; if(awardTitle) p.Titles=(p.Titles||0)+1; });
   const titleMsg=awardTitle?' + 🏆 Title medals awarded':'';
   addLog(`🏆 ${tName} received ${fmt(amt)}! Bank +${fmt(amt*0.6)}, starters +${fmt(share)} MV each${titleMsg}.`,'good'); updateAll();
 }
@@ -3368,7 +3426,7 @@ function applyIndividualPerformance() {
 
 function applyMajorTrophy() {
   const tName=$('major-team-select').value;
-  const starters=players.filter(p=>p.TeamName===tName && p.Role==='Starter');
+  const starters=players.filter(p=>p.TeamName===tName && p.Roster==='Starter');
   if (!tName || !starters.length) return;
   saveState();
   starters.forEach(p=>{ p['Major Winner']=(p['Major Winner']||0)+1; });
@@ -3441,6 +3499,7 @@ function exportExcels() {
   // Export players with correct column names matching expected format
   const pData = players.map(p => ({
     'PlayerName': p.PlayerName || '',
+    'Roster': p.Roster || '',
     'Role': p.Role || '',
     'Market Value': p.MarketValue || 0,         // Internal MarketValue → Excel "PrizePool"
     'Prize Pool': p.PrizePool || 0,           // Accumulated earnings → Excel "Prize Pool"
