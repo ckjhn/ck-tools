@@ -144,6 +144,15 @@
         <button class="btn btn-ghost" id="navResetBtn" title="Jump back to the live old.xlsx / ranking.xlsx pair">⤒ Live</button>
       </div>
 
+      <!-- Custom range: compare ANY two snapshots, e.g. r1.xlsx vs ranking.xlsx, to track a team's full trajectory -->
+      <div class="status-bar" id="timeNavCustomBar" style="display:none; flex-wrap:wrap; gap:10px; align-items:center; font-family:var(--font-mono); font-size:12px;">
+        <span style="color:var(--muted2); text-transform:uppercase; font-size:10px; letter-spacing:.04em;">Custom range</span>
+        <select class="form-control" id="navFromSelect" style="min-width:170px;"></select>
+        <span style="color:var(--border);">→</span>
+        <select class="form-control" id="navToSelect" style="min-width:170px;"></select>
+        <button class="btn btn-primary" id="navCustomCompareBtn" style="padding:4px 14px;">Compare</button>
+      </div>
+
       <!-- ═══════════════════════════════════════
            DASHBOARD
       ═══════════════════════════════════════ -->
