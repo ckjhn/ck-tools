@@ -39,7 +39,8 @@ let teamLogosMap = {};
 /* Time Navigator (old.xlsx / ranking.xlsx / archived snapshots) state */
 let archiveManifest = null;   // raw manifest.json contents
 let navChain = [];            // [{ label, url, date, kind }] ordered oldest → newest
-let navIndex = null;          // index within navChain currently shown as "Actual"
+let navFromIndex = null;      // index within navChain currently shown as "Previous"
+let navToIndex = null;        // index within navChain currently shown as "Actual"
 
 /* Dashboard state */
 let dashSortDesc = true;
@@ -281,8 +282,14 @@ async function loadAll(force = false) {
    TIME NAVIGATOR
    Walks the full snapshot chain:
    r0.xlsx → r1.xlsx → … → r[N].xlsx → old.xlsx → ranking.xlsx
-   "Actual" is whatever the chain points at; "Previous" is always
-   the entry immediately before it in time.
+   Two modes share the same chain:
+     - Arrows (←/→): step one snapshot at a time, always comparing
+       two ADJACENT entries (Previous = Actual - 1).
+     - Custom range (the two <select> dropdowns): compare ANY two
+       entries, e.g. r1.xlsx vs ranking.xlsx, to see a team's
+       accumulated movement across a whole stretch of time.
+   navFromIndex / navToIndex always reflect whichever pair is
+   currently on screen, regardless of which mode produced it.
 ════════════════════════════════════════ */
 function todayIso() {
   const d = new Date();
@@ -295,6 +302,25 @@ function fmtDateDisplay(iso) {
   if (!iso) return '—';
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
+}
+
+function navOptionLabel(entry) {
+  const suffix = entry.kind === 'live' ? ' (today)' : '';
+  return `${entry.label} · ${fmtDateDisplay(entry.date)}${suffix}`;
+}
+
+function populateNavSelects() {
+  const fromSel = $('#navFromSelect'), toSel = $('#navToSelect');
+  if (!fromSel || !toSel) return;
+  const optionsHtml = navChain.map((entry, i) => `<option value="${i}">${escHtml(navOptionLabel(entry))}</option>`).join('');
+  fromSel.innerHTML = optionsHtml;
+  toSel.innerHTML = optionsHtml;
+}
+
+function syncNavSelectsToIndices(fromIdx, toIdx) {
+  const fromSel = $('#navFromSelect'), toSel = $('#navToSelect');
+  if (fromSel) fromSel.value = String(fromIdx);
+  if (toSel) toSel.value = String(toIdx);
 }
 
 async function loadArchiveManifest() {
@@ -315,31 +341,52 @@ async function loadArchiveManifest() {
   chain.push({ label: 'ranking.xlsx', url: NEW_URL, date: todayIso(), kind: 'live' });
 
   navChain = chain;
-  navIndex = navChain.length - 1; // old.xlsx/ranking.xlsx pair is already loaded by loadAll()
+  navToIndex = navChain.length - 1;   // old.xlsx/ranking.xlsx pair is already loaded by loadAll()
+  navFromIndex = navToIndex > 0 ? navToIndex - 1 : 0;
+
+  populateNavSelects();
   updateNavUI();
 }
 
+/* Arrow-driven adjacent stepping: Previous is always Actual - 1 */
 async function loadPairAt(index) {
-  const actual = navChain[index];
-  if (!actual) return;
-  const prev = index > 0 ? navChain[index - 1] : null;
+  const toIdx = index;
+  const fromIdx = toIdx > 0 ? toIdx - 1 : null;
+  await loadSnapshotPair(fromIdx, toIdx, { allowEmpty: true });
+}
+
+/* Dropdown-driven custom range: any two entries, in any order */
+async function loadCustomPair(rawFromIdx, rawToIdx) {
+  if (rawFromIdx === rawToIdx) { setStatus('Pick two different snapshots to compare.', 'err'); return; }
+  const fromIdx = Math.min(rawFromIdx, rawToIdx);
+  const toIdx = Math.max(rawFromIdx, rawToIdx);
+  await loadSnapshotPair(fromIdx, toIdx, { allowEmpty: false, label: 'custom range' });
+}
+
+/* Shared loader: fetches the "to" snapshot into newRowsCache and the
+   "from" snapshot (if any) into oldRowsCache, then reuses the existing
+   computeVRS()/render pipeline exactly as the live old/ranking pair does. */
+async function loadSnapshotPair(fromIdx, toIdx, { allowEmpty = false, label = null } = {}) {
+  const to = navChain[toIdx];
+  if (!to) return;
+  const from = fromIdx !== null && fromIdx !== undefined ? navChain[fromIdx] : null;
 
   setNavBusy(true);
   try {
-    setStatus(`Loading ${actual.label}…`, 'loading');
-    const actualData = await readExcel(actual.url + '?v=' + Date.now());
-    newRowsCache = actualData.json;
-    hltvHeaders = (actualData.raw[0] || []).map(h => (h ?? '').toString().trim());
-    hltvRows = actualData.raw.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
-    recordChange(actual.label, actualData.lastModified, 'nav');
+    setStatus(`Loading ${to.label}…`, 'loading');
+    const toData = await readExcel(to.url + '?v=' + Date.now());
+    newRowsCache = toData.json;
+    hltvHeaders = (toData.raw[0] || []).map(h => (h ?? '').toString().trim());
+    hltvRows = toData.raw.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
+    recordChange(to.label, toData.lastModified, 'nav');
 
-    if (prev) {
-      setStatus(`Loading ${prev.label}…`, 'loading');
-      const prevData = await readExcel(prev.url + '?v=' + Date.now());
-      oldRowsCache = prevData.json;
-      recordChange(prev.label, prevData.lastModified, 'nav');
-    } else {
-      oldRowsCache = []; // r0.xlsx has no predecessor — every team renders as NEW
+    if (from) {
+      setStatus(`Loading ${from.label}…`, 'loading');
+      const fromData = await readExcel(from.url + '?v=' + Date.now());
+      oldRowsCache = fromData.json;
+      recordChange(from.label, fromData.lastModified, 'nav');
+    } else if (allowEmpty) {
+      oldRowsCache = []; // oldest snapshot has no predecessor — every team renders as NEW
     }
 
     computeVRS();
@@ -347,36 +394,43 @@ async function loadPairAt(index) {
     renderHltvCharts();
     renderChangeHistory();
 
-    navIndex = index;
+    navFromIndex = from ? fromIdx : (toIdx > 0 ? toIdx - 1 : 0);
+    navToIndex = toIdx;
+    syncNavSelectsToIndices(navFromIndex, navToIndex);
     updateNavUI();
-    setStatus(`Viewing ${actual.label}` + (prev ? ` vs ${prev.label}` : ' (oldest snapshot — no predecessor)'), 'ok');
+
+    const suffix = label ? ` (${label})` : '';
+    setStatus(`Viewing ${to.label}` + (from ? ` vs ${from.label}${suffix}` : ' (oldest snapshot — no predecessor)'), 'ok');
   } catch (e) {
     console.error(e);
-    setStatus(`Error loading ${actual.label}`, 'err');
+    setStatus(`Error loading comparison`, 'err');
   } finally {
     setNavBusy(false);
   }
 }
 
 function setNavBusy(busy) {
-  const prevBtn = $('#navPrevBtn'), nextBtn = $('#navNextBtn'), resetBtn = $('#navResetBtn');
-  if (prevBtn) prevBtn.disabled = busy || navIndex <= 0;
-  if (nextBtn) nextBtn.disabled = busy || navIndex >= navChain.length - 1;
+  const prevBtn = $('#navPrevBtn'), nextBtn = $('#navNextBtn'), resetBtn = $('#navResetBtn'), compareBtn = $('#navCustomCompareBtn');
+  if (prevBtn) prevBtn.disabled = busy || navToIndex <= 0;
+  if (nextBtn) nextBtn.disabled = busy || navToIndex >= navChain.length - 1;
   if (resetBtn) resetBtn.disabled = busy;
+  if (compareBtn) compareBtn.disabled = busy;
 }
 
 function updateNavUI() {
-  const bar = $('#timeNavBar');
+  const bar = $('#timeNavBar'), customBar = $('#timeNavCustomBar');
   if (!bar) return;
-  if (!navChain.length || navIndex === null) { bar.style.display = 'none'; return; }
+  if (!navChain.length || navToIndex === null) { bar.style.display = 'none'; if (customBar) customBar.style.display = 'none'; return; }
   bar.style.display = '';
+  if (customBar) customBar.style.display = '';
 
-  const actual = navChain[navIndex];
-  const prev = navIndex > 0 ? navChain[navIndex - 1] : null;
+  const actual = navChain[navToIndex];
+  const prev = navFromIndex !== null ? navChain[navFromIndex] : null;
 
-  $('#navActualLabel').textContent = actual ? `${actual.label} · ${fmtDateDisplay(actual.date)}` : '—';
-  $('#navPrevLabel').textContent = prev ? `${prev.label} · ${fmtDateDisplay(prev.date)}` : '— (oldest snapshot)';
+  $('#navActualLabel').textContent = actual ? navOptionLabel(actual) : '—';
+  $('#navPrevLabel').textContent = prev ? navOptionLabel(prev) : '— (oldest snapshot)';
 
+  syncNavSelectsToIndices(navFromIndex ?? 0, navToIndex);
   setNavBusy(false);
 }
 
@@ -2000,9 +2054,17 @@ renderChangeHistory();
 /* ════════════════════════════════════════
    EVENT LISTENERS
 ════════════════════════════════════════ */
+function snapNavToLive() {
+  if (!navChain.length) return;
+  navToIndex = navChain.length - 1;
+  navFromIndex = navToIndex > 0 ? navToIndex - 1 : 0;
+  syncNavSelectsToIndices(navFromIndex, navToIndex);
+  updateNavUI();
+}
+
 $('#btnCompare').addEventListener('click', async () => {
   await loadAll(true);
-  if (navChain.length) { navIndex = navChain.length - 1; updateNavUI(); }
+  snapNavToLive();
 });
 
 $('#btnReloadOld').addEventListener('click', async () => {
@@ -2012,7 +2074,7 @@ $('#btnReloadOld').addEventListener('click', async () => {
     oldRowsCache = d.json;
     recordChange('old.xlsx', d.lastModified, 'reload');
     computeVRS(); renderDashboard(); renderChangeHistory();
-    if (navChain.length) { navIndex = navChain.length - 1; updateNavUI(); }
+    snapNavToLive();
     setStatus('Old reloaded', 'ok');
   } catch (e) { setStatus('Error reloading old.xlsx', 'err'); }
 });
@@ -2026,14 +2088,20 @@ $('#btnReloadNew').addEventListener('click', async () => {
     hltvHeaders = (d.raw[0] || []).map(h => (h ?? '').toString().trim());
     hltvRows = d.raw.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
     computeVRS(); renderDashboard(); renderHltvCharts(); renderChangeHistory();
-    if (navChain.length) { navIndex = navChain.length - 1; updateNavUI(); }
+    snapNavToLive();
     setStatus('New reloaded', 'ok');
   } catch (e) { setStatus('Error reloading ranking.xlsx', 'err'); }
 });
 
-$('#navPrevBtn')?.addEventListener('click', () => { if (navIndex > 0) loadPairAt(navIndex - 1); });
-$('#navNextBtn')?.addEventListener('click', () => { if (navIndex < navChain.length - 1) loadPairAt(navIndex + 1); });
+$('#navPrevBtn')?.addEventListener('click', () => { if (navToIndex > 0) loadPairAt(navToIndex - 1); });
+$('#navNextBtn')?.addEventListener('click', () => { if (navToIndex < navChain.length - 1) loadPairAt(navToIndex + 1); });
 $('#navResetBtn')?.addEventListener('click', () => { if (navChain.length) loadPairAt(navChain.length - 1); });
+
+$('#navCustomCompareBtn')?.addEventListener('click', () => {
+  const fromSel = $('#navFromSelect'), toSel = $('#navToSelect');
+  if (!fromSel || !toSel) return;
+  loadCustomPair(parseInt(fromSel.value, 10), parseInt(toSel.value, 10));
+});
 
 
 ['filterText', 'filterRegion', 'filterTier'].forEach(id => {
