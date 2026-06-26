@@ -126,6 +126,24 @@
         </div>
       </div>
 
+      <!-- Time Navigator: step through old.xlsx / ranking.xlsx / archived r[N].xlsx snapshots -->
+      <div class="status-bar" id="timeNavBar" style="display:none; flex-wrap:wrap; gap:16px; align-items:center;">
+        <button class="btn btn-ghost" id="navPrevBtn" title="Go to an older snapshot" style="padding:4px 10px;">←</button>
+        <div style="display:flex; gap:20px; align-items:center; font-family:var(--font-mono); font-size:12px; flex:1;">
+          <div>
+            <div style="color:var(--muted2); font-size:10px; text-transform:uppercase; letter-spacing:.04em;">Previous</div>
+            <div id="navPrevLabel" style="color:var(--muted);">—</div>
+          </div>
+          <div style="color:var(--border);">→</div>
+          <div>
+            <div style="color:var(--muted2); font-size:10px; text-transform:uppercase; letter-spacing:.04em;">Actual</div>
+            <div id="navActualLabel" style="color:var(--accent2); font-weight:600;">—</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" id="navNextBtn" title="Go to a newer snapshot" style="padding:4px 10px;">→</button>
+        <button class="btn btn-ghost" id="navResetBtn" title="Jump back to the live old.xlsx / ranking.xlsx pair">⤒ Live</button>
+      </div>
+
       <!-- ═══════════════════════════════════════
            DASHBOARD
       ═══════════════════════════════════════ -->
