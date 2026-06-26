@@ -3236,3 +3236,179 @@ body{ -webkit-font-smoothing:antialiased; }
 
 /* serif display headings sit better unspaced */
 .page-title,.card-title{ letter-spacing:0; }
+
+/* ════════════════════════════════════════════════════════
+   THE NEXUS LEDGER — broadsheet redesign layer
+   (re-lays-out the existing DOM into a top masthead + section
+    ribbon; re-skins primary surfaces. Component classes used
+    by app.js are preserved & re-skinned, never renamed.)
+════════════════════════════════════════════════════════ */
+
+/* ── Shell: vertical, masthead on top ── */
+.app-shell{ display:flex !important; flex-direction:column; min-height:100vh; }
+.app-shell.collapsed{ grid-template-columns:none; }
+.main{ display:flex; flex-direction:column; min-width:0; }
+
+/* ── Masthead bar ── */
+.sidebar{
+  position:sticky; top:0; z-index:60;
+  width:100%; height:auto; max-height:none;
+  display:flex; flex-direction:column; gap:0;
+  padding:0; overflow:visible;
+  background:#fbf9f3;
+  border-right:none;
+  border-bottom:2px solid var(--text);
+  box-shadow:0 12px 26px -22px rgba(28,26,23,.7);
+  transition:none;
+}
+.collapsed .sidebar{ padding:0; }
+
+.mh-top{
+  display:flex; align-items:stretch; gap:0;
+  padding:0 26px; min-height:74px;
+  border-bottom:1px solid var(--border);
+}
+.mh-brand{
+  display:flex; flex-direction:column; justify-content:center; gap:0;
+  padding:12px 24px 12px 0;
+}
+.logo{ font-family:var(--font-display); font-size:30px; font-weight:800; line-height:.95; letter-spacing:.5px; }
+.logo-sub{ font-family:var(--font-mono); font-size:9px; letter-spacing:3.5px; text-transform:uppercase; color:var(--muted); margin:6px 0 0; padding:0; opacity:1; height:auto; }
+
+.mh-dateline{
+  flex:1; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:7px;
+  padding:0 22px;
+  border-left:1px solid var(--border); border-right:1px solid var(--border);
+  font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted);
+}
+.mh-edition{ color:var(--accent); font-weight:600; }
+.mh-dot{ color:var(--border-bright); }
+
+/* stats cluster — ledger numbers at right of masthead */
+.side-stat{
+  display:flex !important; flex-direction:row; gap:0; align-items:stretch;
+  padding:0 0 0 6px; height:auto; opacity:1; overflow:visible; margin:0;
+}
+.collapsed .side-stat{ opacity:1; height:auto; padding:0 0 0 6px; }
+.side-pill{
+  display:flex; flex-direction:column; justify-content:center; gap:2px;
+  padding:8px 18px; background:none; border:none; border-left:1px solid var(--border);
+  border-radius:0; text-align:left;
+}
+.side-pill-label{ font-size:8.5px; letter-spacing:1.6px; }
+.side-pill-value{ font-size:23px; line-height:1; font-weight:800; }
+
+.sidebar-toggle{
+  align-self:center; margin:0 0 0 14px; border-radius:2px;
+  background:none; border:1px solid var(--border-bright); color:var(--muted);
+}
+.sidebar-toggle:hover{ background:var(--text); border-color:var(--text); color:var(--bg); transform:none; }
+
+/* ── Section ribbon (horizontal nav) ── */
+.mh-ribbon{
+  flex:none; min-height:0;
+  display:flex; flex-direction:row; align-items:stretch; gap:0;
+  padding:0 22px; overflow-x:auto; overflow-y:hidden;
+}
+.mh-ribbon::-webkit-scrollbar{ height:0; }
+.mh-ribbon .sidebar-section{
+  display:inline-flex; align-items:center; flex:none;
+  font-family:var(--font-mono); font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--muted2); padding:0 12px 0 2px; opacity:1; height:auto; margin:0; white-space:nowrap;
+}
+.mh-ribbon .sidebar-section:not(:first-of-type){ padding-left:6px; }
+.mh-ribbon .sidebar-divider{
+  width:1px; height:16px; align-self:center; margin:0 8px; background:var(--border); flex:none;
+}
+.mh-ribbon .nav-item{
+  flex:none; flex-direction:row; align-items:baseline; gap:7px;
+  padding:13px 13px 11px; margin:0 0 -2px 0;
+  border:none; border-bottom:2px solid transparent; border-radius:0;
+  background:none; color:var(--muted);
+  font-family:var(--font-display); font-size:14.5px; font-weight:600; white-space:nowrap;
+}
+.mh-ribbon .nav-item:hover{ background:none; color:var(--text); border-bottom-color:var(--border-bright); }
+.mh-ribbon .nav-item.active{ background:none; color:var(--accent); border-bottom-color:var(--accent); font-weight:700; }
+.mh-ribbon .nav-icon{
+  font-family:var(--font-mono); font-size:9px; font-weight:600; letter-spacing:0;
+  width:auto; min-width:0; color:var(--muted2);
+}
+.mh-ribbon .nav-item:hover .nav-icon{ color:var(--text); }
+.mh-ribbon .nav-item.active .nav-icon{ color:var(--accent); }
+.mh-back{ margin-left:auto !important; }
+.mh-back .nav-icon{ font-size:13px; }
+
+/* ── Section header (top bar) ── */
+.top-bar{
+  position:static; background:none; backdrop-filter:none;
+  border-bottom:1px solid var(--border);
+  padding:24px 28px 16px; align-items:flex-end;
+}
+.tb-headline{ display:flex; flex-direction:column; gap:0; }
+.tb-kicker{
+  font-family:var(--font-mono); font-size:9px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:7px;
+}
+.page-title{ font-family:var(--font-display); font-size:34px; font-weight:700; line-height:1; }
+.page-sub{ font-family:var(--font-mono); font-size:10.5px; letter-spacing:1px; color:var(--muted); margin-top:7px; }
+
+/* ── Buttons: flat editorial ── */
+.btn{
+  border-radius:2px; font-family:var(--font-mono); font-size:11px;
+  letter-spacing:1px; text-transform:uppercase; font-weight:600; padding:9px 14px; gap:6px;
+}
+.btn-ghost{ background:none; border:1px solid var(--border-bright); color:var(--text); }
+.btn-ghost:hover{ background:var(--text); border-color:var(--text); color:var(--bg); }
+.btn-primary{ background:var(--accent); border:1px solid var(--accent); color:#fff; box-shadow:none; }
+.btn-primary:hover{ background:#73271e; border-color:#73271e; }
+
+/* ── Cards as ruled articles ── */
+.card{ background:#fff; border:1px solid var(--border); border-radius:2px; box-shadow:none; }
+.card-header{ padding:16px 22px 12px; border-bottom:1.5px solid var(--text); align-items:flex-end; }
+.card-title{ font-family:var(--font-display); font-size:19px; font-weight:700; }
+.card-subtitle{ font-size:10px; letter-spacing:1px; text-transform:uppercase; margin-top:3px; }
+.card-body{ padding:20px 22px; }
+
+/* ── Dashboard stat strip ── */
+.stats-row{
+  gap:0; background:#fff; border:1px solid var(--border);
+  border-top:2px solid var(--text); border-radius:2px;
+}
+.stat-pill{
+  flex:1; min-width:118px; padding:14px 18px;
+  background:none; border:none; border-left:1px solid var(--border); border-radius:0;
+}
+.stat-pill:first-child{ border-left:none; }
+.stat-label{ font-size:9px; letter-spacing:1.6px; }
+.stat-value{ font-size:25px; }
+
+/* ── Tables as ledgers ── */
+.table-wrapper{ border:1px solid var(--border); border-radius:2px; }
+thead th{
+  background:#faf8f2; border-bottom:1.5px solid var(--text);
+  font-size:9px; letter-spacing:1.6px; color:var(--muted);
+}
+thead th:first-child, thead th:last-child{ border-radius:0; }
+tbody td{ border-bottom:1px solid var(--border); }
+tbody tr:hover td{ background:rgba(140,47,36,0.045); }
+
+/* ── Pro Analyses tabs as underline tabs ── */
+.pa-tabs{ background:none; border:none; border-bottom:1.5px solid var(--text); border-radius:0; padding:0; gap:0; }
+.pa-tab{ flex:none; border:none; border-bottom:2px solid transparent; border-radius:0; margin-bottom:-1.5px; padding:12px 18px; }
+.pa-tab:hover{ background:none; border-bottom-color:var(--border-bright); }
+.pa-tab.active{ background:none; border-bottom-color:var(--accent); }
+.pa-tab .pa-tab-icon{ background:none; border:none; width:auto; height:auto; font-family:var(--font-mono); font-size:10px; }
+.pa-tab.active .pa-tab-icon{ background:none; border:none; box-shadow:none; }
+
+/* ── mini chart panels ── */
+.mini-panel{ background:#fff; border:1px solid var(--border); border-radius:2px; }
+.mini-panel h4{ letter-spacing:.1em; }
+
+/* ── responsive: keep ribbon usable ── */
+@media (max-width:900px){
+  .app-shell{ grid-template-columns:none !important; }
+  .sidebar{ display:flex !important; }
+  .mh-top{ flex-wrap:wrap; min-height:0; padding:10px 16px; }
+  .mh-dateline{ display:none; }
+  .panels{ padding:16px; }
+}
