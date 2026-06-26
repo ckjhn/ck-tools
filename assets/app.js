@@ -64,16 +64,14 @@ const PANEL_TITLES = {
   charts: 'Charts & Analytics',
   global: 'Global Ranking',
   region: 'Regional Ranking',
-  predictor: 'Match Predictor',
+  matchup: 'Matchup',
   legends: 'Legends Hall',
-  'analysis-vrs': 'VRS Analysis',
-  'analysis-hltv': 'Data Insights',
   'pro-analyses': 'Pro Analyses',
   'seeding': 'Seeding',
-  'h2h': 'H2H Analysis',
   'events': 'Events',
-  'finances': 'Financia',
-  'database': 'Database'
+  'finances': 'Finances',
+  'database': 'Database',
+  'events-org': 'Events Organizer'
 };
 
 function switchPanel(name) {
@@ -103,8 +101,8 @@ function setStatus(msg, state = 'loading') {
 /* ════════════════════════════════════════
    CHART DEFAULTS & HELPERS
 ════════════════════════════════════════ */
-Chart.defaults.color = '#5a7099';
-Chart.defaults.font.family = "'JetBrains Mono', monospace";
+Chart.defaults.color = '#8a8275';
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
 Chart.defaults.font.size = 11;
 
 function baseOpts(extra = {}) {
@@ -114,15 +112,15 @@ function baseOpts(extra = {}) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(7,11,18,0.96)', titleColor: '#e8f0ff', bodyColor: '#c9d8e8',
-        borderColor: 'rgba(79,140,255,0.2)', borderWidth: 1, padding: 10,
+        backgroundColor: 'rgba(244,241,234,0.96)', titleColor: '#1c1a17', bodyColor: '#4a463e',
+        borderColor: 'rgba(140,47,36,0.2)', borderWidth: 1, padding: 10,
         titleFont: { weight: '700', size: 12 }, bodyFont: { size: 11 }
       }
     },
     layout: { padding: 4 },
     scales: {
-      x: { ticks: { color: '#5a7099', maxRotation: 35, font: { size: 10 } }, grid: { color: 'rgba(79,140,255,0.04)' } },
-      y: { ticks: { color: '#5a7099', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(79,140,255,0.05)' }, beginAtZero: true }
+      x: { ticks: { color: '#8a8275', maxRotation: 35, font: { size: 10 } }, grid: { color: 'rgba(140,47,36,0.04)' } },
+      y: { ticks: { color: '#8a8275', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(140,47,36,0.05)' }, beginAtZero: true }
     },
     ...extra
   };
@@ -267,8 +265,6 @@ async function loadAll(force = false) {
   enableFilters(true);
   enableRegion(true);
   enablePredictor(true);
-  $('#btnRunVrsAnalysis').disabled = false;
-  $('#btnRunHltvAnalysis').disabled = false;
   $('#btnDownloadCsv').disabled = false;
 
   renderChangeHistory();
@@ -380,7 +376,7 @@ function rowClass(p) {
 
 function streakHtml(s) {
   const v = Number(s) || 0;
-  return v === 0 ? '<span class="streak-badge cold">—</span>' : `<span class="streak-badge hot">🔥${v}</span>`;
+  return v === 0 ? '<span class="streak-badge cold">—</span>' : `<span class="streak-badge hot">▲${v}</span>`;
 }
 
 /* ════════════════════════════════════════
@@ -522,8 +518,8 @@ function renderRegionChart(labels, values) {
       labels,
       datasets: [{
         data: values.map(v => +v.toFixed(2)),
-        backgroundColor: ['rgba(79,140,255,0.7)', 'rgba(123,95,255,0.7)', 'rgba(0,232,122,0.7)'],
-        borderColor: ['#4f8cff', '#7b5fff', '#00e87a'],
+        backgroundColor: ['rgba(140,47,36,0.7)', 'rgba(168,93,58,0.7)', 'rgba(63,125,82,0.7)'],
+        borderColor: ['#8c2f24', '#a85d3a', '#3f7d52'],
         borderWidth: 1, borderRadius: 4, maxBarThickness: 52
       }]
     },
@@ -537,15 +533,15 @@ function renderTopChart(data, ti, mi, metric) {
   const el = document.getElementById('topChart');
   const ctx = el.getContext('2d');
   const g = ctx.createLinearGradient(0, 0, 0, 250);
-  g.addColorStop(0, 'rgba(255,215,0,0.9)');
-  g.addColorStop(1, 'rgba(202,138,4,0.7)');
+  g.addColorStop(0, 'rgba(169,132,46,0.9)');
+  g.addColorStop(1, 'rgba(150,110,40,0.7)');
   charts.topChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: data.map(r => (r[ti] || '?').toString()),
-      datasets: [{ label: metric, data: data.map(r => num(r[mi])), backgroundColor: g, borderColor: 'rgba(255,215,0,0.4)', borderWidth: 1, borderRadius: 4, maxBarThickness: 48 }]
+      datasets: [{ label: metric, data: data.map(r => num(r[mi])), backgroundColor: g, borderColor: 'rgba(169,132,46,0.4)', borderWidth: 1, borderRadius: 4, maxBarThickness: 48 }]
     },
-    options: { ...baseOpts(), scales: { x: { ticks: { color: '#5a7099', font: { size: 10 }, maxRotation: 35 }, grid: { display: false } }, y: { ticks: { color: '#5a7099', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(79,140,255,0.05)' }, beginAtZero: true } } }
+    options: { ...baseOpts(), scales: { x: { ticks: { color: '#8a8275', font: { size: 10 }, maxRotation: 35 }, grid: { display: false } }, y: { ticks: { color: '#8a8275', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(140,47,36,0.05)' }, beginAtZero: true } } }
   });
   toggleViz('topChart', true);
 }
@@ -612,7 +608,7 @@ function renderDashTable(metric) {
     // Streak display with color
     const streakDisplay = sVal === 0
       ? '<span class="streak-badge cold">—</span>'
-      : `<span class="streak-badge hot">🔥${sVal}</span>`;
+      : `<span class="streak-badge hot">▲${sVal}</span>`;
 
     // Highlight class for the active metric column
     const hlPts = metricKey === 'Points' ? ' dash-cell-active' : '';
@@ -660,12 +656,12 @@ function renderHltvCharts() {
     else toggleViz(chartId, false, 'No data');
   };
 
-  render('Streak', 'streakChart', 'rgba(123,95,255,0.75)', '#7b5fff');
-  render('Victories', 'victoriesChart', 'rgba(0,232,122,0.75)', '#00e87a');
-  render('Prestige', 'prestigeChart', 'rgba(255,215,0,0.8)', '#ffd700');
+  render('Streak', 'streakChart', 'rgba(168,93,58,0.75)', '#a85d3a');
+  render('Victories', 'victoriesChart', 'rgba(63,125,82,0.75)', '#3f7d52');
+  render('Prestige', 'prestigeChart', 'rgba(169,132,46,0.8)', '#a9842e');
 
   const iPts = idx('Points');
-  if (iPts >= 0) { const t = [...pool].sort((a, b) => num(b[iPts]) - num(a[iPts])).slice(0, 20); renderMiniLine('comparisonChart', t.map(r => (r[idxTeam] || '?').toString()), t.map(r => num(r[iPts])), '#4f8cff', 'rgba(79,140,255,0.08)', '#7bb8ff', 'Points'); }
+  if (iPts >= 0) { const t = [...pool].sort((a, b) => num(b[iPts]) - num(a[iPts])).slice(0, 20); renderMiniLine('comparisonChart', t.map(r => (r[idxTeam] || '?').toString()), t.map(r => num(r[iPts])), '#8c2f24', 'rgba(140,47,36,0.08)', '#c08a5a', 'Points'); }
   else toggleViz('comparisonChart', false, 'No data');
 
   const iMaj = idx('Majors');
@@ -683,7 +679,7 @@ function renderMiniBar(id, labels, values, bg, border) {
   charts[id] = new Chart(el.getContext('2d'), {
     type: 'bar',
     data: { labels, datasets: [{ data: values, backgroundColor: bg, borderColor: border, borderWidth: 1, borderRadius: 4, maxBarThickness: 42 }] },
-    options: { ...baseOpts(), scales: { x: { ticks: { color: '#5a7099', font: { size: 10 }, maxRotation: 35 }, grid: { display: false } }, y: { ticks: { color: '#5a7099', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(79,140,255,0.04)' }, beginAtZero: true } } }
+    options: { ...baseOpts(), scales: { x: { ticks: { color: '#8a8275', font: { size: 10 }, maxRotation: 35 }, grid: { display: false } }, y: { ticks: { color: '#8a8275', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(140,47,36,0.04)' }, beginAtZero: true } } }
   });
   el.style.display = 'block';
   const s = document.getElementById(id + 'State'); if (s) s.style.display = 'none';
@@ -695,7 +691,7 @@ function renderMiniLine(id, labels, values, lineColor, fillColor, pointColor, la
   charts[id] = new Chart(el.getContext('2d'), {
     type: 'line',
     data: { labels, datasets: [{ label, data: values, borderColor: lineColor, backgroundColor: fillColor, pointBackgroundColor: pointColor, pointRadius: 3, pointHoverRadius: 5, tension: 0.28, fill: true, borderWidth: 2 }] },
-    options: { ...baseOpts(), plugins: { ...baseOpts().plugins, legend: { display: true, labels: { color: '#5a7099', font: { size: 10 } } } } }
+    options: { ...baseOpts(), plugins: { ...baseOpts().plugins, legend: { display: true, labels: { color: '#8a8275', font: { size: 10 } } } } }
   });
   el.style.display = 'block';
   const s = document.getElementById(id + 'State'); if (s) s.style.display = 'none';
@@ -722,8 +718,8 @@ function renderTeamPie() {
   const el = document.getElementById('teamPieChart');
   charts.teamPieChart = new Chart(el.getContext('2d'), {
     type: 'doughnut',
-    data: { labels: ['Wins', 'Losses'], datasets: [{ data: [w, l], backgroundColor: ['rgba(0,232,122,0.8)', 'rgba(255,64,96,0.8)'], borderColor: ['#00e87a', '#ff4060'], borderWidth: 1 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: '#c9d8e8', font: { weight: '700' }, padding: 14 } }, tooltip: { backgroundColor: 'rgba(7,11,18,0.96)', titleColor: '#e8f0ff', bodyColor: '#c9d8e8', borderColor: 'rgba(79,140,255,0.2)', borderWidth: 1 } } }
+    data: { labels: ['Wins', 'Losses'], datasets: [{ data: [w, l], backgroundColor: ['rgba(63,125,82,0.8)', 'rgba(163,57,44,0.8)'], borderColor: ['#3f7d52', '#a3392c'], borderWidth: 1 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: '#4a463e', font: { weight: '700' }, padding: 14 } }, tooltip: { backgroundColor: 'rgba(244,241,234,0.96)', titleColor: '#1c1a17', bodyColor: '#4a463e', borderColor: 'rgba(140,47,36,0.2)', borderWidth: 1 } } }
   });
   toggleViz('teamPieChart', true);
 }
@@ -971,22 +967,22 @@ function runVrsAnalysis() {
   if (risers.length) html += `<div class="ai-section"><div class="ai-section-title">Biggest Risers</div><div class="ai-list">${risers.map((r, i) => `<div class="ai-list-item"><div class="ai-list-num">${i + 1}</div><div><strong>${escHtml(r.team)}</strong> <span class="delta up" style="margin-left:8px">${r.deltaText} positions</span> <span class="delta up" style="margin-left:8px">${r.pointsDiffText} pts</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(r.region))} · ${escHtml(r.tier || '—')} · Now #${r.newPos}</span></div></div>`).join('')}</div></div>`;
 
   // Fallers
-  if (fallers.length) html += `<div class="ai-section"><div class="ai-section-title">Biggest Fallers</div><div class="ai-list">${fallers.map((r, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(255,64,96,0.1);color:var(--bad)">${i + 1}</div><div><strong>${escHtml(r.team)}</strong> <span class="delta down" style="margin-left:8px">${r.deltaText} positions</span> <span class="delta down" style="margin-left:8px">${r.pointsDiffText} pts</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(r.region))} · ${escHtml(r.tier || '—')} · Now #${r.newPos}</span></div></div>`).join('')}</div></div>`;
+  if (fallers.length) html += `<div class="ai-section"><div class="ai-section-title">Biggest Fallers</div><div class="ai-list">${fallers.map((r, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(163,57,44,0.1);color:var(--bad)">${i + 1}</div><div><strong>${escHtml(r.team)}</strong> <span class="delta down" style="margin-left:8px">${r.deltaText} positions</span> <span class="delta down" style="margin-left:8px">${r.pointsDiffText} pts</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(r.region))} · ${escHtml(r.tier || '—')} · Now #${r.newPos}</span></div></div>`).join('')}</div></div>`;
 
   // Point gainers
-  if (ptGainers.length) html += `<div class="ai-section"><div class="ai-section-title">Biggest Point Gains</div><div class="ai-list">${ptGainers.map((r, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(0,232,122,0.1);color:var(--good)">${i + 1}</div><div><strong>${escHtml(r.team)}</strong> <span class="delta up">${r.pointsDiffText} pts</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(r.region))} · #${r.newPos}</span></div></div>`).join('')}</div></div>`;
+  if (ptGainers.length) html += `<div class="ai-section"><div class="ai-section-title">Biggest Point Gains</div><div class="ai-list">${ptGainers.map((r, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(63,125,82,0.1);color:var(--good)">${i + 1}</div><div><strong>${escHtml(r.team)}</strong> <span class="delta up">${r.pointsDiffText} pts</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(r.region))} · #${r.newPos}</span></div></div>`).join('')}</div></div>`;
 
   // Point losers
-  if (ptLosers.length) html += `<div class="ai-section"><div class="ai-section-title">Biggest Point Losses</div><div class="ai-list">${ptLosers.map((r, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(255,64,96,0.1);color:var(--bad)">${i + 1}</div><div><strong>${escHtml(r.team)}</strong> <span class="delta down">${r.pointsDiffText} pts</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(r.region))} · #${r.newPos}</span></div></div>`).join('')}</div></div>`;
+  if (ptLosers.length) html += `<div class="ai-section"><div class="ai-section-title">Biggest Point Losses</div><div class="ai-list">${ptLosers.map((r, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(163,57,44,0.1);color:var(--bad)">${i + 1}</div><div><strong>${escHtml(r.team)}</strong> <span class="delta down">${r.pointsDiffText} pts</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(r.region))} · #${r.newPos}</span></div></div>`).join('')}</div></div>`;
 
   // Hot streaks
-  if (hotStreaks.length) html += `<div class="ai-section"><div class="ai-section-title">Active Win Streaks</div><div class="ai-list">${hotStreaks.map((t, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(255,185,48,0.1);color:var(--warn)">${i + 1}</div><div><strong>${escHtml(t.team)}</strong> <span style="margin-left:8px">🔥 ${t.streak}-win streak</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(t.region))} · #${t.pos} · ${ptsFmt(t.points)} pts</span></div></div>`).join('')}</div></div>`;
+  if (hotStreaks.length) html += `<div class="ai-section"><div class="ai-section-title">Active Win Streaks</div><div class="ai-list">${hotStreaks.map((t, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(181,134,42,0.1);color:var(--warn)">${i + 1}</div><div><strong>${escHtml(t.team)}</strong> <span style="margin-left:8px">🔥 ${t.streak}-win streak</span><br><span class="text-xs text-muted mono">${escHtml(regionLabel(t.region))} · #${t.pos} · ${ptsFmt(t.points)} pts</span></div></div>`).join('')}</div></div>`;
 
   // Win rate leaders
   if (wrLeaders.length) html += `<div class="ai-section"><div class="ai-section-title">Win Rate Leaders (min 3 games)</div><div class="ai-list">${wrLeaders.map((t, i) => `<div class="ai-list-item"><div class="ai-list-num">${i + 1}</div><div><strong>${escHtml(t.team)}</strong> <span style="margin-left:8px;color:var(--good);font-weight:700;font-family:var(--font-mono)">${(t.wr * 100).toFixed(1)}%</span><br><span class="text-xs text-muted mono">${t.victories}W-${t.loses}L · ${escHtml(regionLabel(t.region))} · #${t.pos}</span></div></div>`).join('')}</div></div>`;
 
   // Close battles
-  if (closeBattles.length) html += `<div class="ai-section"><div class="ai-section-title">Tightest Battles</div><div class="ai-list">${closeBattles.slice(0, 5).map((b, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(255,185,48,0.1);color:var(--warn)">${i + 1}</div><div>#${b.posA} <strong>${escHtml(b.a.team)}</strong> vs #${b.posB} <strong>${escHtml(b.b.team)}</strong> — <span style="color:var(--warn);font-weight:700">${b.diff.toFixed(2)} pts apart</span></div></div>`).join('')}</div></div>`;
+  if (closeBattles.length) html += `<div class="ai-section"><div class="ai-section-title">Tightest Battles</div><div class="ai-list">${closeBattles.slice(0, 5).map((b, i) => `<div class="ai-list-item"><div class="ai-list-num" style="background:rgba(181,134,42,0.1);color:var(--warn)">${i + 1}</div><div>#${b.posA} <strong>${escHtml(b.a.team)}</strong> vs #${b.posB} <strong>${escHtml(b.b.team)}</strong> — <span style="color:var(--warn);font-weight:700">${b.diff.toFixed(2)} pts apart</span></div></div>`).join('')}</div></div>`;
 
   // Key takeaways
   html += `<div class="ai-section"><div class="ai-section-title">Key Takeaways</div><div class="ai-list">${[
@@ -1731,7 +1727,7 @@ function runH2hAnalysis() {
 
   // Verdict
   const probAColor = probA >= probB ? 'var(--accent)' : 'var(--muted2)';
-  const probBColor = probB > probA ? 'var(--accent2, #ff6b9d)' : 'var(--muted2)';
+  const probBColor = probB > probA ? 'var(--accent2, #a85d3a)' : 'var(--muted2)';
   html += `<div class="h2h-verdict">
     <div class="h2h-verdict-icon">🎯</div>
     <div class="h2h-verdict-title" style="color:${verdictColor}">Verdict</div>
@@ -1742,9 +1738,9 @@ function runH2hAnalysis() {
         <span style="color:var(--muted2);font-size:10px">WIN PROBABILITY</span>
         <span style="color:${probBColor};font-weight:700">${probB.toFixed(1)}% ${escHtml(nameB)}</span>
       </div>
-      <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.05)">
+      <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:rgba(28,26,23,0.07)">
         <div style="width:${probA.toFixed(1)}%;background:var(--accent);transition:width 0.5s"></div>
-        <div style="width:${probB.toFixed(1)}%;background:var(--accent2, #ff6b9d);transition:width 0.5s"></div>
+        <div style="width:${probB.toFixed(1)}%;background:var(--accent2, #a85d3a);transition:width 0.5s"></div>
       </div>
     </div>
     <div class="h2h-verdict-factors">
@@ -1930,8 +1926,6 @@ $('#regionRankingSelect').addEventListener('change', recomputeRegionRanking);
   document.getElementById(id).addEventListener('change', renderMatchPredictor);
 });
 
-$('#btnRunVrsAnalysis').addEventListener('click', () => { runVrsAnalysis(); switchPanel('analysis-vrs'); });
-$('#btnRunHltvAnalysis').addEventListener('click', () => { runHltvAnalysis(); switchPanel('analysis-hltv'); });
 $('#dashMetric').addEventListener('change', renderDashboard);
 $('#btnDashSortOrder').addEventListener('click', () => {
   dashSortDesc = !dashSortDesc;
@@ -2362,7 +2356,7 @@ function renderEventsGrid() {
         html += `</div>`;
       }
       if (e.second) {
-        html += `<div class="ev-card-result" style="border-color:rgba(192,200,216,0.15)">`;
+        html += `<div class="ev-card-result" style="border-color:rgba(154,160,171,0.15)">`;
         html += `<div class="ev-card-trophy-wrap">🥈</div>`;
         html += `<div><div class="ev-result-label">2nd Place</div><div class="ev-result-value silver-text">${escHtml(e.second)}</div></div>`;
         html += `</div>`;
@@ -3153,7 +3147,7 @@ document.getElementById('btnClearEvFilters').addEventListener('click', () => {
   try { await loadTeamLogos(); }
   catch (e) { console.warn('Team logos load failed:', e); }
   try { await loadAll(false); }
-  catch (e) { console.error(e); setStatus('Auto-load failed. Ensure /file/*.xlsx exists.', 'err'); }
+  catch (e) { console.warn('Auto-load failed:', e); setStatus('Auto-load failed. Ensure /file/*.xlsx exists.', 'err'); }
   try { await loadEventsJson(); }
   catch (e) { console.warn('Events load failed:', e); }
 })();
