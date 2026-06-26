@@ -1,0 +1,19 @@
+{
+  "archives": [
+    { "file": "r0.xlsx",  "date": "2026-01-01" },
+    { "file": "r1.xlsx",  "date": "2026-01-10" },
+    { "file": "r2.xlsx",  "date": "2026-01-20" },
+    { "file": "r3.xlsx",  "date": "2026-02-01" },
+    { "file": "r4.xlsx",  "date": "2026-02-10" },
+    { "file": "r5.xlsx",  "date": "2026-02-20" },
+    { "file": "r6.xlsx",  "date": "2026-03-01" },
+    { "file": "r7.xlsx",  "date": "2026-03-10" },
+    { "file": "r8.xlsx",  "date": "2026-03-20" },
+    { "file": "r9.xlsx",  "date": "2026-04-01" },
+    { "file": "r10.xlsx", "date": "2026-04-10" },
+    { "file": "r11.xlsx", "date": "2026-04-20" },
+    { "file": "r12.xlsx", "date": "2026-05-01" },
+    { "file": "r13.xlsx", "date": "2026-05-10" }
+  ],
+  "old": { "date": "2026-06-01" }
+}
