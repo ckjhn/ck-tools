@@ -17,74 +17,82 @@
        SIDEBAR
   ════════════════════════════════════════════ -->
   <aside class="sidebar" id="sidebar">
-    <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">◀</button>
 
-    <div class="logo">NEXUS</div>
-    <div class="logo-sub">Ranking Command</div>
+    <!-- ─── MASTHEAD ─── -->
+    <div class="mh-top">
+      <div class="mh-brand">
+        <div class="logo">NEXUS</div>
+        <div class="logo-sub">The Ranking Command Ledger</div>
+      </div>
 
-    <div class="sidebar-nav">
-      <div class="sidebar-section">Main Views</div>
-      <a class="nav-item active" data-panel="dashboard" onclick="switchPanel('dashboard');return false" href="#">
-        <span class="nav-icon">DA</span><span class="nav-label">Dashboard</span>
-      </a>
-      <a class="nav-item" data-panel="charts" onclick="switchPanel('charts');return false" href="#">
-        <span class="nav-icon">CH</span><span class="nav-label">Charts & Analytics</span>
-      </a>
+      <div class="mh-dateline">
+        <span class="mh-edition">Unified Edition</span>
+        <span class="mh-dot">/</span><span>VRS &amp; HLTV</span>
+        <span class="mh-dot">/</span><span>KZ Studio · Kilzys</span>
+        <span class="mh-dot">/</span><span>Local · No API</span>
+      </div>
 
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section">Rankings</div>
-      <a class="nav-item" data-panel="global" onclick="switchPanel('global');return false" href="#">
-        <span class="nav-icon">GL</span><span class="nav-label">Global Ranking</span>
-      </a>
-      <a class="nav-item" data-panel="region" onclick="switchPanel('region');return false" href="#">
-        <span class="nav-icon">RG</span><span class="nav-label">Regional Ranking</span>
-      </a>
-
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section">Tools</div>
-      <a class="nav-item" data-panel="matchup" onclick="switchPanel('matchup');return false" href="#">
-        <span class="nav-icon">MU</span><span class="nav-label">Matchup</span>
-      </a>
-      <a class="nav-item" data-panel="legends" onclick="switchPanel('legends');return false" href="#">
-        <span class="nav-icon">LG</span><span class="nav-label">Legends Hall</span>
-      </a>
-      <a class="nav-item" data-panel="pro-analyses" onclick="switchPanel('pro-analyses');return false" href="#">
-        <span class="nav-icon">PA</span><span class="nav-label">Pro Analyses</span>
-      </a>
-      <a class="nav-item" data-panel="seeding" onclick="switchPanel('seeding');return false" href="#">
-        <span class="nav-icon">SD</span><span class="nav-label">Seeding</span>
-      </a>
-      <a class="nav-item" data-panel="events" onclick="switchPanel('events');return false" href="#">
-        <span class="nav-icon">EV</span><span class="nav-label">Events</span>
-      </a>
-
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section">Management</div>
-      <a class="nav-item" data-panel="finances" onclick="switchPanel('finances');return false" href="#">
-        <span class="nav-icon">FI</span><span class="nav-label">Finances</span>
-      </a>
-      <a class="nav-item" data-panel="database" onclick="switchPanel('database');return false" href="#">
-        <span class="nav-icon">DB</span><span class="nav-label">Database</span>
-      </a>
-      <a class="nav-item" data-panel="events-org" onclick="switchPanel('events-org');return false" href="#">
-        <span class="nav-icon">EO</span><span class="nav-label">Events Organizer</span>
-      </a>
-
-      <div class="sidebar-divider"></div>
       <div class="side-stat">
         <div class="side-pill"><span class="side-pill-label">Teams</span><span class="side-pill-value" id="sideTeams">—</span></div>
         <div class="side-pill"><span class="side-pill-label">Risers</span><span class="side-pill-value up" id="sideUp">—</span></div>
         <div class="side-pill"><span class="side-pill-label">Fallers</span><span class="side-pill-value down" id="sideDown">—</span></div>
       </div>
 
-      <div class="sidebar-divider"></div>
-      <a class="nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Back to Menu</span></a>
+      <button class="sidebar-toggle" id="sidebarToggle" title="Compact sections">≡</button>
     </div>
 
-    <div class="sidebar-footer">
-      <div class="sidebar-footer-text">NEXUS · KZ Studio · by Kilzys</div>
-      <div class="sidebar-footer-text" style="margin-top:2px; color:var(--muted2)">Local processing · No API</div>
-    </div>
+    <!-- ─── SECTION RIBBON ─── -->
+    <nav class="sidebar-nav mh-ribbon">
+      <span class="sidebar-section">Views</span>
+      <a class="nav-item active" data-panel="dashboard" onclick="switchPanel('dashboard');return false" href="#">
+        <span class="nav-icon">01</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" data-panel="charts" onclick="switchPanel('charts');return false" href="#">
+        <span class="nav-icon">02</span><span class="nav-label">Charts</span>
+      </a>
+
+      <span class="sidebar-divider"></span>
+      <span class="sidebar-section">Rankings</span>
+      <a class="nav-item" data-panel="global" onclick="switchPanel('global');return false" href="#">
+        <span class="nav-icon">03</span><span class="nav-label">Global</span>
+      </a>
+      <a class="nav-item" data-panel="region" onclick="switchPanel('region');return false" href="#">
+        <span class="nav-icon">04</span><span class="nav-label">Regional</span>
+      </a>
+
+      <span class="sidebar-divider"></span>
+      <span class="sidebar-section">Tools</span>
+      <a class="nav-item" data-panel="matchup" onclick="switchPanel('matchup');return false" href="#">
+        <span class="nav-icon">05</span><span class="nav-label">Matchup</span>
+      </a>
+      <a class="nav-item" data-panel="legends" onclick="switchPanel('legends');return false" href="#">
+        <span class="nav-icon">06</span><span class="nav-label">Legends</span>
+      </a>
+      <a class="nav-item" data-panel="pro-analyses" onclick="switchPanel('pro-analyses');return false" href="#">
+        <span class="nav-icon">07</span><span class="nav-label">Pro Analyses</span>
+      </a>
+      <a class="nav-item" data-panel="seeding" onclick="switchPanel('seeding');return false" href="#">
+        <span class="nav-icon">08</span><span class="nav-label">Seeding</span>
+      </a>
+      <a class="nav-item" data-panel="events" onclick="switchPanel('events');return false" href="#">
+        <span class="nav-icon">09</span><span class="nav-label">Events</span>
+      </a>
+
+      <span class="sidebar-divider"></span>
+      <span class="sidebar-section">Manage</span>
+      <a class="nav-item" data-panel="finances" onclick="switchPanel('finances');return false" href="#">
+        <span class="nav-icon">10</span><span class="nav-label">Finances</span>
+      </a>
+      <a class="nav-item" data-panel="database" onclick="switchPanel('database');return false" href="#">
+        <span class="nav-icon">11</span><span class="nav-label">Database</span>
+      </a>
+      <a class="nav-item" data-panel="events-org" onclick="switchPanel('events-org');return false" href="#">
+        <span class="nav-icon">12</span><span class="nav-label">Organizer</span>
+      </a>
+
+      <span class="sidebar-divider"></span>
+      <a class="nav-item mh-back" href="index.html"><span class="nav-icon">↩</span><span class="nav-label">Menu</span></a>
+    </nav>
   </aside>
 
   <!-- ════════════════════════════════════════════
@@ -94,7 +102,8 @@
 
     <!-- Top bar -->
     <div class="top-bar">
-      <div>
+      <div class="tb-headline">
+        <span class="tb-kicker">Section</span>
         <div class="page-title" id="pageTitle">Dashboard</div>
         <div class="page-sub">NEXUS Ranking Command Center · Unified View</div>
       </div>
