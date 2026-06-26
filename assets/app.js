@@ -14,6 +14,8 @@ const REGION_CLASS = { "AM": "region-am", "EU": "region-eu", "AS/SIS/ESEA": "reg
 const OLD_URL = "file/old.xlsx";
 const NEW_URL = "file/ranking.xlsx";
 const HISTORY_URL = "file/history.xlsx";
+const ARCHIVE_DIR = "file/archives/";
+const MANIFEST_URL = ARCHIVE_DIR + "manifest.json";
 
 /* ════════════════════════════════════════
    GLOBAL STATE
@@ -33,6 +35,11 @@ let paFilteredOpponent = '';
 
 /* Team logos */
 let teamLogosMap = {};
+
+/* Time Navigator (old.xlsx / ranking.xlsx / archived snapshots) state */
+let archiveManifest = null;   // raw manifest.json contents
+let navChain = [];            // [{ label, url, date, kind }] ordered oldest → newest
+let navIndex = null;          // index within navChain currently shown as "Actual"
 
 /* Dashboard state */
 let dashSortDesc = true;
@@ -268,6 +275,109 @@ async function loadAll(force = false) {
   $('#btnDownloadCsv').disabled = false;
 
   renderChangeHistory();
+}
+
+/* ════════════════════════════════════════
+   TIME NAVIGATOR
+   Walks the full snapshot chain:
+   r0.xlsx → r1.xlsx → … → r[N].xlsx → old.xlsx → ranking.xlsx
+   "Actual" is whatever the chain points at; "Previous" is always
+   the entry immediately before it in time.
+════════════════════════════════════════ */
+function todayIso() {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function fmtDateDisplay(iso) {
+  if (!iso) return '—';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+async function loadArchiveManifest() {
+  try {
+    const res = await fetch(MANIFEST_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    archiveManifest = await res.json();
+  } catch (e) {
+    console.warn('manifest.json not found or failed to load:', e);
+    archiveManifest = { archives: [], old: { date: null } };
+  }
+
+  const chain = (archiveManifest.archives || [])
+    .map(entry => ({ label: entry.file, url: ARCHIVE_DIR + entry.file, date: entry.date, kind: 'archive' }))
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  chain.push({ label: 'old.xlsx', url: OLD_URL, date: archiveManifest.old?.date || null, kind: 'old' });
+  chain.push({ label: 'ranking.xlsx', url: NEW_URL, date: todayIso(), kind: 'live' });
+
+  navChain = chain;
+  navIndex = navChain.length - 1; // old.xlsx/ranking.xlsx pair is already loaded by loadAll()
+  updateNavUI();
+}
+
+async function loadPairAt(index) {
+  const actual = navChain[index];
+  if (!actual) return;
+  const prev = index > 0 ? navChain[index - 1] : null;
+
+  setNavBusy(true);
+  try {
+    setStatus(`Loading ${actual.label}…`, 'loading');
+    const actualData = await readExcel(actual.url + '?v=' + Date.now());
+    newRowsCache = actualData.json;
+    hltvHeaders = (actualData.raw[0] || []).map(h => (h ?? '').toString().trim());
+    hltvRows = actualData.raw.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
+    recordChange(actual.label, actualData.lastModified, 'nav');
+
+    if (prev) {
+      setStatus(`Loading ${prev.label}…`, 'loading');
+      const prevData = await readExcel(prev.url + '?v=' + Date.now());
+      oldRowsCache = prevData.json;
+      recordChange(prev.label, prevData.lastModified, 'nav');
+    } else {
+      oldRowsCache = []; // r0.xlsx has no predecessor — every team renders as NEW
+    }
+
+    computeVRS();
+    renderDashboard();
+    renderHltvCharts();
+    renderChangeHistory();
+
+    navIndex = index;
+    updateNavUI();
+    setStatus(`Viewing ${actual.label}` + (prev ? ` vs ${prev.label}` : ' (oldest snapshot — no predecessor)'), 'ok');
+  } catch (e) {
+    console.error(e);
+    setStatus(`Error loading ${actual.label}`, 'err');
+  } finally {
+    setNavBusy(false);
+  }
+}
+
+function setNavBusy(busy) {
+  const prevBtn = $('#navPrevBtn'), nextBtn = $('#navNextBtn'), resetBtn = $('#navResetBtn');
+  if (prevBtn) prevBtn.disabled = busy || navIndex <= 0;
+  if (nextBtn) nextBtn.disabled = busy || navIndex >= navChain.length - 1;
+  if (resetBtn) resetBtn.disabled = busy;
+}
+
+function updateNavUI() {
+  const bar = $('#timeNavBar');
+  if (!bar) return;
+  if (!navChain.length || navIndex === null) { bar.style.display = 'none'; return; }
+  bar.style.display = '';
+
+  const actual = navChain[navIndex];
+  const prev = navIndex > 0 ? navChain[navIndex - 1] : null;
+
+  $('#navActualLabel').textContent = actual ? `${actual.label} · ${fmtDateDisplay(actual.date)}` : '—';
+  $('#navPrevLabel').textContent = prev ? `${prev.label} · ${fmtDateDisplay(prev.date)}` : '— (oldest snapshot)';
+
+  setNavBusy(false);
 }
 
 /* ════════════════════════════════════════
@@ -1837,6 +1947,11 @@ function renderChangeHistory() {
     'ranking.xlsx': '📊',
     'history.xlsx': '📜'
   };
+  function iconFor(file) {
+    if (fileIcons[file]) return fileIcons[file];
+    if (/^r\d+\.xlsx$/i.test(file)) return '🗄️';
+    return '📁';
+  }
 
   const now = new Date();
   function timeAgo(dateStr) {
@@ -1855,9 +1970,9 @@ function renderChangeHistory() {
   }
 
   list.innerHTML = changeHistory.slice(0, 20).map(entry => {
-    const icon = fileIcons[entry.file] || '📁';
-    const actionLabel = entry.action === 'reload' ? 'reload' : 'load';
-    const labelCls = entry.action === 'reload' ? 'reload' : '';
+    const icon = iconFor(entry.file);
+    const actionLabel = entry.action === 'reload' ? 'reload' : entry.action === 'nav' ? 'time-travel' : 'load';
+    const labelCls = entry.action === 'reload' ? 'reload' : entry.action === 'nav' ? 'nav' : '';
     const modifiedInfo = entry.fileModified ? `File modified: ${formatDate(entry.fileModified)}` : '';
     return `<div class="change-history-item" title="${modifiedInfo}">
       <span class="change-history-icon">${icon}</span>
@@ -1885,11 +2000,21 @@ renderChangeHistory();
 /* ════════════════════════════════════════
    EVENT LISTENERS
 ════════════════════════════════════════ */
-$('#btnCompare').addEventListener('click', () => loadAll(true));
+$('#btnCompare').addEventListener('click', async () => {
+  await loadAll(true);
+  if (navChain.length) { navIndex = navChain.length - 1; updateNavUI(); }
+});
 
 $('#btnReloadOld').addEventListener('click', async () => {
-  try { setStatus('Reloading old.xlsx…', 'loading'); const d = await readExcel(OLD_URL + '?v=' + Date.now()); oldRowsCache = d.json; recordChange('old.xlsx', d.lastModified, 'reload'); computeVRS(); renderDashboard(); renderChangeHistory(); setStatus('Old reloaded', 'ok'); }
-  catch (e) { setStatus('Error reloading old.xlsx', 'err'); }
+  try {
+    setStatus('Reloading old.xlsx…', 'loading');
+    const d = await readExcel(OLD_URL + '?v=' + Date.now());
+    oldRowsCache = d.json;
+    recordChange('old.xlsx', d.lastModified, 'reload');
+    computeVRS(); renderDashboard(); renderChangeHistory();
+    if (navChain.length) { navIndex = navChain.length - 1; updateNavUI(); }
+    setStatus('Old reloaded', 'ok');
+  } catch (e) { setStatus('Error reloading old.xlsx', 'err'); }
 });
 
 $('#btnReloadNew').addEventListener('click', async () => {
@@ -1901,9 +2026,15 @@ $('#btnReloadNew').addEventListener('click', async () => {
     hltvHeaders = (d.raw[0] || []).map(h => (h ?? '').toString().trim());
     hltvRows = d.raw.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
     computeVRS(); renderDashboard(); renderHltvCharts(); renderChangeHistory();
+    if (navChain.length) { navIndex = navChain.length - 1; updateNavUI(); }
     setStatus('New reloaded', 'ok');
   } catch (e) { setStatus('Error reloading ranking.xlsx', 'err'); }
 });
+
+$('#navPrevBtn')?.addEventListener('click', () => { if (navIndex > 0) loadPairAt(navIndex - 1); });
+$('#navNextBtn')?.addEventListener('click', () => { if (navIndex < navChain.length - 1) loadPairAt(navIndex + 1); });
+$('#navResetBtn')?.addEventListener('click', () => { if (navChain.length) loadPairAt(navChain.length - 1); });
+
 
 ['filterText', 'filterRegion', 'filterTier'].forEach(id => {
   const el = document.getElementById(id);
@@ -3148,6 +3279,8 @@ document.getElementById('btnClearEvFilters').addEventListener('click', () => {
   catch (e) { console.warn('Team logos load failed:', e); }
   try { await loadAll(false); }
   catch (e) { console.warn('Auto-load failed:', e); setStatus('Auto-load failed. Ensure /file/*.xlsx exists.', 'err'); }
+  try { await loadArchiveManifest(); }
+  catch (e) { console.warn('Archive manifest load failed:', e); }
   try { await loadEventsJson(); }
   catch (e) { console.warn('Events load failed:', e); }
 })();
