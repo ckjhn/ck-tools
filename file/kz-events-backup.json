@@ -12,16 +12,16 @@
     "stars": 5,
     "major": "yes",
     "region": "global",
-    "status": "Live",
-    "stage": "Playoffs - Grand Final",
-    "nextMatch1": "Vitality x Iluminar  - Saturday 08:00",
+    "status": "Finished",
+    "winner": "Iluminar",
+    "second": "Vitality",
+    "mvp": "kilzys",
+    "evp": "ZywOo",
+    "vp": "heroghoxxt   -   ropz   -   m0NESY",
+    "stage": "",
+    "nextMatch1": "",
     "nextMatch2": "",
     "nextMatch3": "",
-    "winner": "",
-    "second": "",
-    "mvp": "",
-    "evp": "",
-    "vp": "",
     "prizeDistribution": {
       "1st": "$500,000 | $150,000 [club reward]",
       "2nd": "$170,000 | $65,000 [club reward]",
@@ -106,8 +106,8 @@
       "final": {
         "team1": "Vitality",
         "team2": "Iluminar",
-        "score1": "",
-        "score2": ""
+        "score1": "1",
+        "score2": "3"
       }
     },
     "playoffPlayers": {
