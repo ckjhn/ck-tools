@@ -3352,3 +3352,54 @@ document.getElementById('btnClearEvFilters').addEventListener('click', () => {
   try { await loadEventsJson(); }
   catch (e) { console.warn('Events load failed:', e); }
 })();
+
+/* ════════════════════════════════════════
+   SIDEBAR FULL-HIDE (full-screen content mode)
+   « button hides the menu entirely; a small floating »
+   button in the top-left corner (or Ctrl+B) brings it back.
+   State persists across reloads via localStorage.
+════════════════════════════════════════ */
+(() => {
+  const HIDE_KEY = 'nexus_sidebar_hidden';
+  const hideBtn = $('#sidebarHideBtn');
+  const showBtn = $('#sidebarShowBtn');
+  if (!hideBtn || !showBtn || !appShell) return;
+
+  function resizeCharts() {
+    // Same pattern as the compact toggle: wait for the 0.3s
+    // grid transition to finish, then let Chart.js re-measure.
+    setTimeout(() => {
+      if (typeof charts === 'object' && charts) {
+        Object.values(charts).forEach(c => { if (c) c.resize(); });
+      }
+    }, 350);
+  }
+
+  function setSidebarHidden(hidden, persist = true) {
+    appShell.classList.toggle('sidebar-hidden', hidden);
+    document.body.classList.toggle('sidebar-hidden-mode', hidden);
+    if (persist) {
+      try { localStorage.setItem(HIDE_KEY, hidden ? '1' : '0'); } catch (e) {}
+    }
+    resizeCharts();
+  }
+
+  hideBtn.addEventListener('click', () => setSidebarHidden(true));
+  showBtn.addEventListener('click', () => setSidebarHidden(false));
+
+  // Ctrl+B / Cmd+B toggles, VS Code style — but never while the
+  // user is typing in an input, select or textarea.
+  document.addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'b') return;
+    const tag = (document.activeElement?.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    e.preventDefault();
+    setSidebarHidden(!appShell.classList.contains('sidebar-hidden'));
+  });
+
+  // Restore previous state on load (no animation flash: the class
+  // lands before first paint since this runs synchronously).
+  try {
+    if (localStorage.getItem(HIDE_KEY) === '1') setSidebarHidden(true, false);
+  } catch (e) {}
+})();

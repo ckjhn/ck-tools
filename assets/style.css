@@ -3412,3 +3412,73 @@ tbody tr:hover td{ background:rgba(140,47,36,0.045); }
   .mh-dateline{ display:none; }
   .panels{ padding:16px; }
 }
+
+/* ═══════════════════════════════════════
+   SIDEBAR HIDDEN (full-screen content mode)
+   Toggled via #sidebarHideBtn / #sidebarShowBtn / Ctrl+B
+═══════════════════════════════════════ */
+
+/* Collapse the sidebar grid track to zero.
+   .app-shell already transitions grid-template-columns (0.3s
+   cubic-bezier), so this slides shut instead of snapping. */
+.app-shell.sidebar-hidden {
+  grid-template-columns: 0 1fr;
+}
+
+/* Let the sidebar actually shrink to 0: kill min-width, padding
+   and border so no sliver remains; fade contents during the slide. */
+.app-shell.sidebar-hidden .sidebar {
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-right: none;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    padding 0.3s cubic-bezier(0.4,0,0.2,1),
+    opacity 0.2s ease;
+}
+
+/* Extra hide-button sits beside the compact toggle */
+.sidebar-hide-btn { margin-left: 6px; }
+
+/* ─── Floating restore button (top-left corner) ─── */
+#sidebarShowBtn {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 500;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  visibility: hidden;            /* shown only in hidden mode */
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--border-bright);
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: var(--glow-accent);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.2s cubic-bezier(0.4,0,0.2,1),
+    opacity 0.2s ease,
+    visibility 0.2s;
+}
+#sidebarShowBtn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateX(0) scale(1.05);
+}
+body.sidebar-hidden-mode #sidebarShowBtn {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(0);
+}
