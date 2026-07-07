@@ -183,17 +183,17 @@
     "major": "no",
     "region": "americas",
     "status": "Live",
-    "stage": "Group A opening matches - Group B opening matches",
-    "nextMatch1": "FURIA x Mana",
-    "nextMatch2": "MIBR Academy x AMKAL",
-    "nextMatch3": "Mythic x Immortals",
+    "stage": "Quarter Finals - Playoffs",
+    "nextMatch1": "Take Flyte x Mythic",
+    "nextMatch2": "paiN Academy x AMKAL",
+    "nextMatch3": "Entropiq x Legacy",
     "winner": "",
     "second": "",
     "mvp": "",
     "evp": "",
     "vp": "",
     "prizeDistribution": {
-      "1st": "",
+      "1st": "$8,000",
       "2nd": "",
       "3rd-4th": "",
       "5th-8th": "",
@@ -202,48 +202,48 @@
       "17th-24th": ""
     },
     "playerPrizes": {
-      "mvp": "",
-      "evp": "",
-      "vp": ""
+      "mvp": "$4,999.5",
+      "evp": "$3,571.5",
+      "vp": "$2,143.5"
     },
     "playoffTeams": [
       {
-        "name": "",
+        "name": "Take Flyte",
         "logo": ""
       },
       {
-        "name": "",
+        "name": "paiN Academy",
         "logo": ""
       },
       {
-        "name": "",
+        "name": "Entropiq",
         "logo": ""
       },
       {
-        "name": "",
+        "name": "FURIA",
         "logo": ""
       },
       {
-        "name": "",
+        "name": "Into The Beach",
         "logo": ""
       },
       {
-        "name": "",
+        "name": "Legacy",
         "logo": ""
       },
       {
-        "name": "",
+        "name": "AMKAL",
         "logo": ""
       },
       {
-        "name": "",
+        "name": "Mythic",
         "logo": ""
       }
     ],
     "playoffBracket": {
       "qf": [
         {
-          "score1": "",
+          "score1": "1",
           "score2": ""
         },
         {
@@ -281,61 +281,61 @@
       }
     },
     "playoffPlayers": {
-      "Team 1": [
-        "",
-        "",
-        "",
-        "",
-        ""
+      "Take Flyte": [
+        "REKMEISTER",
+        "Panic",
+        "FxRE",
+        "Crisp",
+        "huncho"
       ],
-      "Team 2": [
-        "",
-        "",
-        "",
-        "",
-        ""
+      "paiN Academy": [
+        "NEKIZ",
+        "b4rtiN",
+        "bsd",
+        "h0t",
+        "blaze"
       ],
-      "Team 3": [
-        "",
-        "",
-        "",
-        "",
-        ""
+      "Entropiq": [
+        "MarKE",
+        "nosraC",
+        "shane",
+        "dea",
+        "Benkai"
       ],
-      "Team 4": [
-        "",
-        "",
-        "",
-        "",
-        ""
+      "FURIA": [
+        "FalleN",
+        "yuurih",
+        "YEKINDAR",
+        "KSCERATO",
+        "molodoy"
       ],
-      "Team 5": [
-        "",
-        "",
-        "",
-        "",
-        ""
+      "Into The Beach": [
+        "shz",
+        "JOTA",
+        "t9rnay",
+        "urban0",
+        "levi"
       ],
-      "Team 6": [
-        "",
-        "",
-        "",
-        "",
-        ""
+      "Legacy": [
+        "dumau",
+        "latto",
+        "n1ssim",
+        "lux",
+        "saadzin"
       ],
-      "Team 7": [
-        "",
-        "",
-        "",
-        "",
-        ""
+      "AMKAL": [
+        "next",
+        "BK1",
+        "nacho",
+        "abizz",
+        "ivz"
       ],
-      "Team 8": [
-        "",
-        "",
-        "",
-        "",
-        ""
+      "Mythic": [
+        "Cooper",
+        "hyza",
+        "Trucklover86",
+        "PwnAlone",
+        "hades"
       ]
     }
   },
