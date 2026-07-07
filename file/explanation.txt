@@ -1,8 +1,8 @@
 OLD.xlsx
-Playoffs DreamHack Winter
+Dream Hack Winter Final and FiReLEAGUE Buenos Aires Group B and C
 
 ranking.xlsx
-Dream Hack Winter Final and FiReLEAGUE Buenos Aires Group B and C
+FiReLEAGUE Buenos Aires Group D
 
 
 RANKINGS:
@@ -21,7 +21,7 @@ ranking 11 [Season 0] : Stage 2 [1:0] [0:1]
 ranking 12 [Season 0] : Stage 2 [2:0] [1:1] [0:2]
 ranking 13 [Season 0] : Stage 2 [2:1] [1:2]
 ranking 14 [Season 0] : Stage 2 [2:2]
-ranking n [Season 0] : 
+ranking 15 [Season 0] : Playoffs DreamHack Winter
 ranking n [Season 0] : 
 ranking n [Season 0] : 
 
