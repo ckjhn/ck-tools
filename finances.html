@@ -400,6 +400,10 @@ html[data-theme="light"] .badge-cyan,html[data-theme="light"] .badge-green,html[
 .fo-ico svg.ico { width:14px; height:14px; }
 .fo-ico:hover { border-color:var(--border-hot); color:var(--cyan); transform:translateY(-1px); }
 .fo-ico:disabled { opacity:.35; cursor:not-allowed; }
+.ach-col-muted { opacity:.26; pointer-events:none; filter:saturate(.15); transition:opacity .15s; }
+.ach-edit-flag { display:none; font-family:var(--font-data); font-size:9.5px; font-weight:700; letter-spacing:.9px; color:var(--orange); background:var(--orange-dim); border:1px solid rgba(232,168,107,0.38); border-radius:7px; padding:6px 9px; margin-bottom:11px; }
+.ach-edit-flag.on { display:block; }
+.pm-hist-acts { display:flex; gap:5px; align-self:center; }
 .fo-ico-wide { flex:1; font-family:var(--font-data); font-size:9.5px; font-weight:700; letter-spacing:.8px; color:var(--orange); }
 /* negotiation chat cards */
 .ng-card { background:var(--bg2); border:1px solid var(--border); border-left:3px solid var(--cyan); border-radius:12px; padding:14px; margin-bottom:14px; }
@@ -1136,12 +1140,13 @@ html[data-theme="light"] .badge-cyan,html[data-theme="light"] .badge-green,html[
   <path d="M10 15h4l1 4H9l1-4z"/>
 </svg></div>
       <div class="pm-head-main">
-        <div class="pm-name">Record Achievement</div>
-        <div class="pm-sub">Record-only — no money moves here. Team events also write to every starter's personal history.</div>
+        <div class="pm-name" id="ach-modal-title">Record Achievement</div>
+        <div class="pm-sub" id="ach-modal-sub">Record-only — no money moves here. Team events also write to every starter's personal history.</div>
       </div>
     </div>
     <div class="pm-split" style="grid-template-columns:1fr 1fr;">
-      <div class="pm-col">
+      <div class="pm-col" id="ach-col-team">
+        <div class="ach-edit-flag" id="ach-ev-flag">✎ EDITING EXISTING TITLE</div>
         <div class="pm-section-title">Team Achievement</div>
         <div class="g2" style="gap:10px; margin-bottom:10px;">
           <div class="form-group"><div class="form-label">Team</div><select class="nx-select" id="hist-ev-team"></select></div>
@@ -1175,9 +1180,11 @@ html[data-theme="light"] .badge-cyan,html[data-theme="light"] .badge-green,html[
           <div class="form-group"><div class="form-label">Event Prize Pool ($)</div><input type="number" class="nx-input" id="hist-ev-pool" placeholder="0.00"></div>
           <div class="form-group"><div class="form-label">Team Winnings ($)</div><input type="number" class="nx-input" id="hist-ev-won" placeholder="0.00"></div>
         </div>
-        <button class="btn btn-yellow btn-full" onclick="applyTeamAchievement()">Add to History — Team + Starters</button>
+        <button class="btn btn-yellow btn-full" id="ach-ev-submit" onclick="submitTeamAchievement()">Add to History — Team + Starters</button>
+        <button class="btn btn-ghost btn-full" id="ach-ev-cancel" style="display:none; margin-top:8px;" onclick="cancelAchEdit()">✕ CANCEL EDIT</button>
       </div>
-      <div class="pm-col" style="border-left:1px solid var(--border);">
+      <div class="pm-col" id="ach-col-award" style="border-left:1px solid var(--border);">
+        <div class="ach-edit-flag" id="ach-aw-flag">✎ EDITING EXISTING MEDAL</div>
         <div class="pm-section-title" style="margin-top:0;">Player Award</div>
         <div style="font-family:var(--font-data); font-size:10.5px; color:var(--text-faint); margin:-4px 0 14px; line-height:1.6;">Medals &amp; money are still granted in Operations. This only writes the award to the player's personal history.</div>
         <div class="g2" style="gap:10px; margin-bottom:10px;">
@@ -1215,7 +1222,8 @@ html[data-theme="light"] .badge-cyan,html[data-theme="light"] .badge-green,html[
           </div>
         </div>
         <div class="form-group" style="margin-bottom:16px;"><div class="form-label">Event Name</div><input type="text" class="nx-input" id="hist-aw-event" placeholder="e.g. IEM Cologne"></div>
-        <button class="btn btn-cyan btn-full" onclick="applyPlayerAward()">Add Award to Player History</button>
+        <button class="btn btn-cyan btn-full" id="ach-aw-submit" onclick="submitPlayerAward()">Add Award to Player History</button>
+        <button class="btn btn-ghost btn-full" id="ach-aw-cancel" style="display:none; margin-top:8px;" onclick="cancelAchEdit()">✕ CANCEL EDIT</button>
       </div>
     </div>
   </div>
@@ -2699,7 +2707,10 @@ function renderFoAchievements(team){
         <div class="pm-hist-title">${e.event}${Number(e.tier)>=5?' <span class="badge badge-yellow" style="margin-left:5px;">MAJOR</span>':''}</div>
         <div class="pm-hist-meta">${histStars(e.tier)} · ${e.scope} · ${e.position} · Pool ${fmtK(e.prizePool)} · Won <span style="color:var(--green);">${fmtK(e.wonAmount)}</span> · Month ${e.month}</div>
       </div>
-      <button class="fo-ico" title="Delete entry" onclick="deleteTeamEvent('${e.id}')" style="align-self:center;"><svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      <div class="pm-hist-acts">
+        <button class="fo-ico" title="Edit this title" onclick="openAchEditTeam('${e.id}')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+        <button class="fo-ico" title="Delete entry" onclick="deleteTeamEvent('${e.id}')"><svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
     </div>`).join('') : '<div class="pm-hist-empty">No achievements recorded for this team yet.</div>';
   const rosterNames=new Set(players.filter(p=>p.TeamName===team).map(p=>String(p.PlayerName)));
   const awards=playerHistory.filter(h=>h.kind!=='EVENT'&&rosterNames.has(h.player));
@@ -2710,16 +2721,144 @@ function renderFoAchievements(team){
         <div class="pm-hist-title">${h.player} <span style="color:var(--text-dim); font-weight:500;">— ${h.kind} · ${h.event}</span></div>
         <div class="pm-hist-meta">${histStars(h.tier)} · ${h.scope} · ${h.position} · Month ${h.month}</div>
       </div>
-      <button class="fo-ico" title="Delete entry" onclick="deletePlayerAward('${h.id}')" style="align-self:center;"><svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      <div class="pm-hist-acts">
+        <button class="fo-ico" title="Edit this medal" onclick="openAchEditAward('${h.id}')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+        <button class="fo-ico" title="Delete entry" onclick="deletePlayerAward('${h.id}')"><svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
     </div>`).join('') : '<div class="pm-hist-empty">No individual awards recorded for this roster.</div>';
 }
 function openAchModal(){
+  achEditRef=null; setAchMode('create');
   populateHistoryControls();
   const at=$('dash-team-select').value;
   const sel=$('hist-ev-team'); if (sel && at && finances.some(t=>t.TeamName===at)) sel.value=at;
   $('ach-modal-overlay').classList.add('active');
 }
-function closeAchModal(){ $('ach-modal-overlay').classList.remove('active'); }
+function closeAchModal(){ achEditRef=null; setAchMode('create'); $('ach-modal-overlay').classList.remove('active'); }
+
+/* ── ✎ ACHIEVEMENT EDIT MODE ────────────────────────────────
+   Reuses the Record Achievement modal. achEditRef holds the row
+   under edit; null means we are in normal create mode. */
+let achEditRef = null;
+
+function setAchMode(mode, kind){
+  const editing = mode === 'edit';
+  const title = $('ach-modal-title'), sub = $('ach-modal-sub');
+  const colEv = $('ach-col-team'), colAw = $('ach-col-award');
+  if (!colEv || !colAw) return;
+  /* mute the column that is not being edited so nothing is created by accident */
+  colEv.classList.toggle('ach-col-muted', editing && kind !== 'team');
+  colAw.classList.toggle('ach-col-muted', editing && kind !== 'award');
+  $('ach-ev-flag').classList.toggle('on', editing && kind === 'team');
+  $('ach-aw-flag').classList.toggle('on', editing && kind === 'award');
+  $('ach-ev-cancel').style.display = (editing && kind === 'team') ? '' : 'none';
+  $('ach-aw-cancel').style.display = (editing && kind === 'award') ? '' : 'none';
+  $('ach-ev-submit').textContent = (editing && kind === 'team') ? '\ud83d\udcbe SAVE CHANGES' : 'Add to History \u2014 Team + Starters';
+  $('ach-aw-submit').textContent = (editing && kind === 'award') ? '\ud83d\udcbe SAVE CHANGES' : 'Add Award to Player History';
+  /* the player an award belongs to is frozen while editing */
+  const pin = $('hist-aw-player'); if (pin) pin.disabled = (editing && kind === 'award');
+  if (title) title.textContent = !editing ? 'Record Achievement' : (kind === 'team' ? 'Edit Team Achievement' : 'Edit Player Award');
+  if (sub) sub.textContent = !editing
+    ? 'Record-only \u2014 no money moves here. Team events also write to every starter\'s personal history.'
+    : (kind === 'team'
+        ? 'Saving re-syncs the linked player entries to the selected team\'s current starters. No money moves.'
+        : 'Log entry only \u2014 medal counters and prize money in \u2699 OPS are not affected.');
+}
+
+function openAchEditTeam(id){
+  const e = teamHistory.find(x=>String(x.id)===String(id));
+  if (!e) return alert('That entry no longer exists.');
+  populateHistoryControls();
+  const sel = $('hist-ev-team');
+  sel.value = e.team;
+  /* team may have been renamed or removed from finances — keep it selectable anyway */
+  if (sel.value !== e.team) {
+    sel.insertAdjacentHTML('afterbegin', `<option value="${e.team}">${e.team} (not in league)</option>`);
+    sel.value = e.team;
+  }
+  $('hist-ev-name').value  = e.event || '';
+  $('hist-ev-tier').value  = String(Number(e.tier) || 1);
+  histTierChanged('ev');
+  if (Number(e.tier) < 5) $('hist-ev-scope').value = e.scope || 'Global';
+  $('hist-ev-pos').value   = e.position || 'Winner';
+  $('hist-ev-pool').value  = e.prizePool || '';
+  $('hist-ev-won').value   = e.wonAmount || '';
+  achEditRef = { kind:'team', id:String(e.id) };
+  setAchMode('edit','team');
+  $('ach-modal-overlay').classList.add('active');
+}
+
+function openAchEditAward(id){
+  const h = playerHistory.find(x=>String(x.id)===String(id));
+  if (!h) return alert('That entry no longer exists.');
+  if (h.kind === 'EVENT') return alert('This entry comes from a team title \u2014 edit it from the team achievement above.');
+  populateHistoryControls();
+  $('hist-aw-player').value = h.player;
+  $('hist-aw-kind').value   = h.kind;
+  $('hist-aw-tier').value   = String(Number(h.tier) || 1);
+  histTierChanged('aw');
+  if (Number(h.tier) < 5) $('hist-aw-scope').value = h.scope || 'Global';
+  $('hist-aw-pos').value    = h.position || 'Winner';
+  $('hist-aw-event').value  = h.event || '';
+  achEditRef = { kind:'award', id:String(h.id) };
+  setAchMode('edit','award');
+  $('ach-modal-overlay').classList.add('active');
+}
+
+function cancelAchEdit(){ closeAchModal(); }
+
+/* dispatchers — the same button creates or saves depending on mode */
+function submitTeamAchievement(){ (achEditRef && achEditRef.kind==='team') ? saveTeamAchievement() : applyTeamAchievement(); }
+function submitPlayerAward(){ (achEditRef && achEditRef.kind==='award') ? savePlayerAward() : applyPlayerAward(); }
+
+function saveTeamAchievement(){
+  const ref = achEditRef; if (!ref || ref.kind !== 'team') return;
+  const rec = teamHistory.find(x=>String(x.id)===String(ref.id));
+  if (!rec) { closeAchModal(); return alert('That entry no longer exists.'); }
+  const team      = $('hist-ev-team').value;
+  const event     = ($('hist-ev-name').value||'').trim();
+  const tier      = Number($('hist-ev-tier').value) || 1;
+  const scope     = tier >= 5 ? 'Global' : $('hist-ev-scope').value;
+  const position  = $('hist-ev-pos').value;
+  const prizePool = parseFloat($('hist-ev-pool').value) || 0;
+  const wonAmount = parseFloat($('hist-ev-won').value) || 0;
+  if (!team)  return alert('Select a team.');
+  if (!event) return alert('Enter the event name.');
+  const starters = players.filter(p=>p.TeamName===team && p.Roster==='Starter');
+  const moved = rec.team !== team;
+  if (!confirm(`Save changes to this title?\n"${rec.event}" \u2192 "${event}" (${histStars(tier)} \u00b7 ${scope} \u00b7 ${position})\n`
+    + `Team: ${rec.team}${moved ? ' \u2192 ' + team : ''}\n`
+    + `Linked player entries will be rebuilt from ${team}'s ${starters.length} current starter(s).\n`
+    + `RECORD-ONLY \u2014 no money moves.`)) return;
+  saveState();
+  rec.team = team; rec.event = event; rec.tier = tier; rec.scope = scope;
+  rec.position = position; rec.prizePool = prizePool; rec.wonAmount = wonAmount;
+  /* unconditional re-fan-out: drop every linked row, rebuild against current starters */
+  playerHistory = playerHistory.filter(h=>String(h.refId) !== String(rec.id));
+  starters.forEach(p=>playerHistory.unshift({ id:rec.id+'-'+String(p.PlayerName), refId:rec.id,
+    player:String(p.PlayerName), team, kind:'EVENT', event, tier, scope, position, month:rec.month }));
+  addLog(`\u270e HISTORY EDIT: ${team} \u2014 "${event}" (${histStars(tier)}, ${scope}, ${position}) updated \u00b7 re-synced to ${starters.length} starter(s).`,'warn');
+  closeAchModal(); renderHistory(); updateAll();
+}
+
+function savePlayerAward(){
+  const ref = achEditRef; if (!ref || ref.kind !== 'award') return;
+  const rec = playerHistory.find(x=>String(x.id)===String(ref.id));
+  if (!rec) { closeAchModal(); return alert('That entry no longer exists.'); }
+  const kind     = $('hist-aw-kind').value;
+  const event    = ($('hist-aw-event').value||'').trim();
+  const tier     = Number($('hist-aw-tier').value) || 1;
+  const scope    = tier >= 5 ? 'Global' : $('hist-aw-scope').value;
+  const position = $('hist-aw-pos').value;
+  if (!event) return alert('Enter the event name.');
+  if (!confirm(`Save changes to ${rec.player}'s medal?\n${rec.kind} \u00b7 "${rec.event}"\n`
+    + `\u2192 ${kind} \u00b7 "${event}" (${histStars(tier)} \u00b7 ${scope} \u00b7 ${position})\n`
+    + `Log entry only \u2014 medal counters and prize money in \u2699 OPS are NOT changed.`)) return;
+  saveState();
+  rec.kind = kind; rec.event = event; rec.tier = tier; rec.scope = scope; rec.position = position;
+  addLog(`\u270e HISTORY EDIT: ${rec.player} \u2014 ${kind} at "${event}" (${histStars(tier)}, ${scope}, ${position}) updated.`,'warn');
+  closeAchModal(); renderHistory(); updateAll();
+}
 /* ── 🏛 PLAYER HISTORY — expandable inside any player card ─────── */
 function medalGlyph(kind){ return kind==='EVENT'?'🏆':kind==='MVP'?'🥇':kind==='EVP'?'🥈':'🥉'; }
 function playerHistPanelHTML(pn){
