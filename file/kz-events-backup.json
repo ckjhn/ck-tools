@@ -182,16 +182,16 @@
     "stars": 1,
     "major": "no",
     "region": "americas",
-    "status": "Live",
-    "stage": "Grand Final",
-    "nextMatch1": "AMKAL x FURIA",
+    "status": "Finished",
+    "winner": "FURIA",
+    "second": "AMKAL",
+    "mvp": "molodoy",
+    "evp": "kscerato",
+    "vp": "yuurih - next - abizz",
+    "stage": "",
+    "nextMatch1": "",
     "nextMatch2": "",
     "nextMatch3": "",
-    "winner": "",
-    "second": "",
-    "mvp": "",
-    "evp": "",
-    "vp": "",
     "prizeDistribution": {
       "1st": "$3,000",
       "2nd": "$2,000",
@@ -247,37 +247,37 @@
           "score2": "0"
         },
         {
-          "score1": "",
-          "score2": ""
+          "score1": "0",
+          "score2": "2"
         },
         {
-          "score1": "",
-          "score2": ""
+          "score1": "2",
+          "score2": "1"
         },
         {
-          "score1": "",
-          "score2": ""
+          "score1": "2",
+          "score2": "1"
         }
       ],
       "sf": [
         {
           "team1": "Take Flyte",
           "team2": "AMKAL",
-          "score1": "",
+          "score1": "0",
           "score2": "2"
         },
         {
           "team1": "Entropiq",
           "team2": "FURIA",
-          "score1": "",
+          "score1": "0",
           "score2": "2"
         }
       ],
       "final": {
         "team1": "AMKAL",
         "team2": "FURIA",
-        "score1": "",
-        "score2": ""
+        "score1": "1",
+        "score2": "2"
       }
     },
     "playoffPlayers": {
