@@ -2426,6 +2426,20 @@ function updateEventsStats() {
   el('evTotalPrize').textContent = '$' + totalPrize.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
+/* ─── Medal awardee splitter ───
+   VP (and occasionally other medals) can be shared by several players and is
+   registered as a single string: "player1 - player2 - player3".
+   Splits ONLY on a hyphen that has whitespace on both sides, so nicknames that
+   contain a hyphen themselves (e.g. "t-3xy") are never broken apart.
+   Spacing around the separator is free-form: "a - b" and "a   -   b" both work. */
+function splitAwardees(field) {
+  if (!field) return [];
+  return String(field)
+    .split(/\s+-\s+/)
+    .map(n => n.trim())
+    .filter(Boolean);
+}
+
 /* ─── Populate filter dropdowns ─── */
 function populateEventsFilters() {
   // Player medal filter
@@ -2433,8 +2447,7 @@ function populateEventsFilters() {
   eventsData.forEach(e => {
     if ((e.status || '').toLowerCase() === 'finished') {
       ['mvp', 'evp', 'vp'].forEach(k => {
-        const v = (e[k] || '').trim();
-        if (v) playerSet.add(v);
+        splitAwardees(e[k]).forEach(n => playerSet.add(n));
       });
     }
   });
@@ -2480,8 +2493,8 @@ function getFilteredEvents() {
     if (regionQ && (e.region || '') !== regionQ) return false;
     // Player medal filter
     if (playerQ) {
-      const medals = [e.mvp, e.evp, e.vp].map(v => (v || '').trim());
-      if (!medals.includes(playerQ)) return false;
+      const medalists = [e.mvp, e.evp, e.vp].reduce((acc, v) => acc.concat(splitAwardees(v)), []);
+      if (!medalists.includes(playerQ)) return false;
     }
     // Team win filter
     if (teamQ && (e.winner || '').trim() !== teamQ) return false;
