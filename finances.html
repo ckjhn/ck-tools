@@ -934,20 +934,56 @@ html[data-theme="light"] .badge-cyan,html[data-theme="light"] .badge-green,html[
         <!-- TOURNAMENT -->
         <div class="card green">
           <div class="card-title">🏆 TOURNAMENT ENGINE</div>
+          <div class="alert-item info" style="margin-bottom:10px; font-size:10.5px; font-family:var(--font-data);">
+            📌 EVENT CONTEXT — shared by 💰 PRIZE and ⭐ INDIVIDUAL AWARDS.<br>5⭐ / Tier SS entries are always recorded as Global.
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <div class="form-label">EVENT / TOURNAMENT NAME</div>
+            <input type="text" class="nx-input" id="ops-event-name" placeholder="e.g. IEM Cologne 2026">
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <div class="form-label">SCOPE</div>
+            <select class="nx-select" id="ops-event-scope">
+              <option value="Global">Global</option>
+              <option value="Regional">Regional</option>
+            </select>
+          </div>
+
+          <hr class="sep">
+
+          <div class="card-title" style="margin-top:4px;">💰 PRIZE DISTRIBUTION</div>
           <div class="form-group" style="margin-bottom:8px;">
             <div class="form-label">TEAM</div>
             <select class="nx-select" id="tourney-team-select"></select>
+          </div>
+          <div class="g2" style="margin-bottom:8px;">
+            <div class="form-group">
+              <div class="form-label">RATING</div>
+              <select class="nx-select" id="ops-prize-rating">
+                <option value="5">⭐⭐⭐⭐⭐ SS+ — Major</option>
+                <option value="4">⭐⭐⭐⭐ S</option>
+                <option value="3" selected>⭐⭐⭐ A</option>
+                <option value="2">⭐⭐ B</option>
+                <option value="1">⭐ C</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <div class="form-label">PLACEMENT</div>
+              <select class="nx-select" id="ops-prize-place">
+                <option value="none" selected>— None (money only)</option>
+                <option value="Winner">🥇 1st — Champion</option>
+                <option value="Second">🥈 2nd</option>
+                <option value="Third">🥉 3rd</option>
+              </select>
+            </div>
           </div>
           <div class="form-group" style="margin-bottom:8px;">
             <div class="form-label">PRIZE POOL ($)</div>
             <input type="number" class="nx-input" id="prize-amount" placeholder="0.00">
           </div>
-          <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px; cursor:pointer; font-family:var(--font-data); font-size:12px; color:var(--text);">
-            <input type="checkbox" id="tourney-award-title" style="accent-color:var(--green); width:16px; height:16px;">
-            <span>🏆 AWARD TITLE MEDALS <span style="color:var(--text-dim);">(check only if team won the tournament)</span></span>
-          </label>
           <div class="alert-item info" style="margin-bottom:10px; font-size:11px; font-family:var(--font-data);">
-            60% → Team Bank&nbsp;&nbsp;|&nbsp;&nbsp;40% → Starter MV split&nbsp;&nbsp;|&nbsp;&nbsp;Titles: optional ☑
+            60% → Team Bank&nbsp;&nbsp;|&nbsp;&nbsp;40% → Starter MV split<br>
+            Placement 1st–3rd → history for team + active roster<br>🏆 Title counter: 1st place only
           </div>
           <button class="btn btn-green btn-full" onclick="distributeTourneyPrize()">DISTRIBUTE PRIZE</button>
 
@@ -1165,7 +1201,7 @@ html[data-theme="light"] .badge-cyan,html[data-theme="light"] .badge-green,html[
           <div class="form-group"><div class="form-label">Scope</div>
             <select class="nx-select" id="hist-ev-scope" disabled>
               <option value="Global">Global</option>
-              <option value="State">State</option>
+              <option value="Regional">Regional</option>
             </select>
           </div>
           <div class="form-group"><div class="form-label">Position</div>
@@ -1210,7 +1246,7 @@ html[data-theme="light"] .badge-cyan,html[data-theme="light"] .badge-green,html[
           <div class="form-group"><div class="form-label">Scope</div>
             <select class="nx-select" id="hist-aw-scope" disabled>
               <option value="Global">Global</option>
-              <option value="State">State</option>
+              <option value="Regional">Regional</option>
             </select>
           </div>
           <div class="form-group"><div class="form-label">Position</div>
@@ -2912,8 +2948,8 @@ function renderTransactions(){
 }
 function loadHistoryWB(wb){
   const sheet=n=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n]):[];
-  teamHistory=sheet('TeamHistory').filter(r=>r.event).map(r=>({id:r.id||Date.now()+Math.random(), team:String(r.team||''), event:String(r.event||''), tier:Number(r.tier)||1, scope:String(r.scope||'Global'), position:String(r.position||'Winner'), prizePool:Number(r.prizePool)||0, wonAmount:Number(r.wonAmount)||0, month:Number(r.month)||1}));
-  playerHistory=sheet('PlayerHistory').filter(r=>r.player&&r.event).map(r=>({id:r.id||Date.now()+Math.random(), refId:r.refId||null, player:String(r.player||''), team:String(r.team||''), kind:String(r.kind||'EVENT'), event:String(r.event||''), tier:Number(r.tier)||1, scope:String(r.scope||'Global'), position:String(r.position||'Winner'), month:Number(r.month)||1}));
+  teamHistory=sheet('TeamHistory').filter(r=>r.event).map(r=>({id:r.id||Date.now()+Math.random(), team:String(r.team||''), event:String(r.event||''), tier:Number(r.tier)||1, scope:normScope(r.scope), position:String(r.position||'Winner'), prizePool:Number(r.prizePool)||0, wonAmount:Number(r.wonAmount)||0, month:Number(r.month)||1}));
+  playerHistory=sheet('PlayerHistory').filter(r=>r.player&&r.event).map(r=>({id:r.id||Date.now()+Math.random(), refId:r.refId||null, player:String(r.player||''), team:String(r.team||''), kind:String(r.kind||'EVENT'), event:String(r.event||''), tier:Number(r.tier)||1, scope:normScope(r.scope), position:String(r.position||'Winner'), month:Number(r.month)||1}));
   transactions=sheet('Transactions').filter(r=>r.type).map(r=>({id:r.id||Date.now()+Math.random(), month:Number(r.month)||1, type:String(r.type||''), playerName:String(r.playerName||''), from:String(r.from||''), to:String(r.to||''), amount:Number(r.amount)||0, note:String(r.note||'')}));
   transferHistory=sheet('Deals').filter(r=>r.playerName).map(r=>({id:r.id||Date.now()+Math.random(), buyer:String(r.buyer||''), seller:String(r.seller||''), playerName:String(r.playerName||''), amount:Number(r.amount)||0, status:String(r.status||''), month:Number(r.month)||1}));
   const meta=sheet('Meta');
@@ -4059,33 +4095,63 @@ function applyTravelExpenses() {
   addLog(`✈ Travel (${type}): charged ${teams.join(', ')}.`,'warn'); $('travel-search').value=''; updateAll();
 }
 
+/* ── SCOPE — legacy "State" rows migrate to "Regional" on import ── */
+const SCOPE_MIGRATION = { state:'Regional', regional:'Regional', global:'Global' };
+function normScope(v){
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return 'Global';
+  return SCOPE_MIGRATION[s.toLowerCase()] || s;
+}
+
+/* ── ⚙ OPS EVENT CONTEXT — shared by prize distribution & individual awards ── */
+function opsEventName(){ const el = $('ops-event-name'); return ((el && el.value) || '').trim(); }
+function opsEventScope(tier){
+  if (Number(tier) >= 5) return 'Global';           // 5⭐ / SS = Major ⇒ always Global
+  const el = $('ops-event-scope');
+  return normScope((el && el.value) || 'Global');
+}
+
 /* ═══ TOURNAMENT & AWARDS ═══ */
 function distributeTourneyPrize() {
   const amt=parseFloat($('prize-amount').value), tName=$('tourney-team-select').value;
   const team=finances.find(t=>t.TeamName===tName);
   if (!amt||!team) return;
-  const awardTitle=$('tourney-award-title').checked;
+  const place  = $('ops-prize-place').value;                 // none | Winner | Second | Third
+  const rating = Number($('ops-prize-rating').value) || 1;
+  const podium = place !== 'none';
+  const event  = opsEventName();
+  const scope  = opsEventScope(rating);
+  // a podium finish writes history, so it must carry a real event name
+  if (podium && !event) return alert('Enter the EVENT / TOURNAMENT NAME — it is written into the team and player history.');
   saveState(); team.CurrentBank+=amt*0.6;
   const share=amt*0.4/5;
   const starters=players.filter(p=>p.TeamName===tName&&p.Roster==='Starter').slice(0,5);
-  starters.forEach(p=>{ p.MarketValue+=share; p.PrizePool=(p.PrizePool||0)+share; if(awardTitle) p.Titles=(p.Titles||0)+1; });
-  if (awardTitle) {
-    // Mirror the title win into team + player history so it surfaces in the Achievements panel & persists to history.xlsx
-    const tier = amt>=45000?5:amt>=30000?4:amt>=18000?3:amt>=8000?2:1;
+  // money always moves; the 🏆 Titles counter moves on a win only
+  starters.forEach(p=>{ p.MarketValue+=share; p.PrizePool=(p.PrizePool||0)+share; if(place==='Winner') p.Titles=(p.Titles||0)+1; });
+  if (podium) {
+    // Mirror the finish into team + player history so it surfaces in the Achievements panel & persists to history.xlsx
     const id=Date.now()+Math.floor(Math.random()*999);
-    teamHistory.unshift({id, team:tName, event:'Tournament Payout', tier, scope:'Global', position:'Winner', prizePool:amt, wonAmount:amt*0.6, month:monthCounter});
-    starters.forEach(p=>playerHistory.unshift({id:id+'-'+String(p.PlayerName), refId:id, player:String(p.PlayerName), team:tName, kind:'EVENT', event:'Tournament Payout', tier, scope:'Global', position:'Winner', month:monthCounter}));
+    teamHistory.unshift({id, team:tName, event, tier:rating, scope, position:place, prizePool:amt, wonAmount:amt*0.6, month:monthCounter});
+    starters.forEach(p=>playerHistory.unshift({id:id+'-'+String(p.PlayerName), refId:id, player:String(p.PlayerName), team:tName, kind:'EVENT', event, tier:rating, scope, position:place, month:monthCounter}));
   }
-  const titleMsg=awardTitle?' + 🏆 Title medals awarded':'';
-  addLog(`🏆 ${tName} received ${fmt(amt)}! Bank +${fmt(amt*0.6)}, starters +${fmt(share)} MV each${titleMsg}.`,'good'); updateAll();
+  const medal = place==='Winner'?'🥇':place==='Second'?'🥈':place==='Third'?'🥉':'';
+  const histMsg = podium
+    ? ` · ${medal} ${place==='Winner'?'1st':place==='Second'?'2nd':'3rd'} at ${event} (${histStars(rating)}, ${scope}) recorded for the team and ${starters.length} starter(s)${place==='Winner'?' + 🏆 Title medals':''}.`
+    : ' · no placement — money only, nothing recorded in history.';
+  addLog(`🏆 ${tName} received ${fmt(amt)}! Bank +${fmt(amt*0.6)}, starters +${fmt(share)} MV each.${histMsg}`,'good'); updateAll();
 }
 
 function applyIndividualPerformance() {
   const pName=$('perf-player-select').value, p=players.find(x=>String(x.PlayerName)===pName);
   if (!p) return;
-  saveState();
   const type=$('perf-type').value;
   const tierKey=$('perf-tier').value;
+  const tierNum={ss:5, s:4, a:3, b:2, c:1}[tierKey]||3;
+  const event=opsEventName();
+  const scope=opsEventScope(tierNum);
+  // this always writes a history row, so the event name is mandatory
+  if (!event) return alert('Enter the EVENT / TOURNAMENT NAME — it is written into the player history.');
+  saveState();
   const pool={ss:50000, s:40000, a:30000, b:20000, c:15000}[tierKey];
   const pct={mvp:35/105, evp:25/105, vp:15/105}[type];
   const reward=pool*pct;
@@ -4095,9 +4161,8 @@ function applyIndividualPerformance() {
   else if (type==='evp') p.EVP=(p.EVP||0)+1;
   else p.VP=(p.VP||0)+1;
   // Mirror the grant into the player's history log so it surfaces in the Achievements panel & persists to history.xlsx
-  const tierNum={ss:5, s:4, a:3, b:2, c:1}[tierKey]||3;
-  playerHistory.unshift({id:Date.now()+Math.floor(Math.random()*999), refId:null, player:pName, team:p.TeamName==='none'?'':p.TeamName, kind:type.toUpperCase(), event:'Operations Grant', tier:tierNum, scope:'Global', position:'Winner', month:monthCounter});
-  addLog(`⭐ ${pName} awarded ${type.toUpperCase()} (+${fmt(reward)} MV & prize pool, medal granted).`,'good'); updateAll();
+  playerHistory.unshift({id:Date.now()+Math.floor(Math.random()*999), refId:null, player:pName, team:p.TeamName==='none'?'':p.TeamName, kind:type.toUpperCase(), event, tier:tierNum, scope, position:'Winner', month:monthCounter});
+  addLog(`⭐ ${pName} awarded ${type.toUpperCase()} at ${event} (${histStars(tierNum)}, ${scope}) — +${fmt(reward)} MV & prize pool, medal granted.`,'good'); updateAll();
 }
 
 function applyMajorTrophy() {
