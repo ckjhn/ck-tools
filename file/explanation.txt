@@ -1,8 +1,8 @@
 OLD.xlsx
-FiReLEAGUE Buenos Aires Group D
+FiReLEAGUE Buenos Aires Playoffs
 
 ranking.xlsx
-FiReLEAGUE Buenos Aires Playoffs
+Winamax Spanish Circuit 2026 Stage 1
 
 
 RANKINGS:
@@ -23,7 +23,7 @@ ranking 13 [Season 0] : Stage 2 [2:1] [1:2]
 ranking 14 [Season 0] : Stage 2 [2:2]
 ranking 15 [Season 0] : Playoffs DreamHack Winter
 ranking 16 [Season 0] : Dream Hack Winter Final and FiReLEAGUE Buenos Aires Group B and C
-ranking n [Season 0] : 
+ranking 17 [Season 0] : FiReLEAGUE Buenos Aires Group D
 ranking n [Season 0] : 
 ranking n [Season 0] : 
 ranking n [Season 0] : 
