@@ -405,6 +405,8 @@ html[data-theme="light"] .badge-cyan,html[data-theme="light"] .badge-green,html[
 .ach-edit-flag.on { display:block; }
 .pm-hist-acts { display:flex; gap:5px; align-self:center; }
 .fo-ico-wide { flex:1; font-family:var(--font-data); font-size:9.5px; font-weight:700; letter-spacing:.8px; color:var(--orange); }
+.fo-ico-danger { color:var(--red); border-color:rgba(240,115,111,0.28); }
+.fo-ico-danger:hover { border-color:var(--red); color:var(--red); background:var(--red-dim); }
 /* negotiation chat cards */
 .ng-card { background:var(--bg2); border:1px solid var(--border); border-left:3px solid var(--cyan); border-radius:12px; padding:14px; margin-bottom:14px; }
 .ng-card-clause { border-left-color:var(--orange); }
@@ -2404,6 +2406,20 @@ function setPlayerSale(name){
   saveState(); p.OnSale=n>0?n:0;
   addLog(n>0?`🏷 ${name} listed ON SALE at ${fmt(n)}.`:`🏷 ${name}: sale listing removed.`, n>0?'good':undefined); renderOffice(); updateAll();
 }
+function releasePlayer(name){
+  const p=players.find(x=>String(x.PlayerName)===name); if (!p||p.TeamName==='none') return;
+  const fromTeam=p.TeamName;
+  if (activeNegFor(name)) return alert(`${name} is locked in an active negotiation. Resolve or withdraw from it first.`);
+  if (clauseTalks.some(t=>t.status==='open'&&t.playerName===name)) return alert(`${name} has open clause talks. Resolve them first.`);
+  if (!confirm(`Release ${name} from ${fromTeam}?\n⚠ This is FREE — ${fromTeam} receives no fee. ${name} immediately becomes a FREE AGENT and any club (including yours) can sign him from the MARKET.\nThis cannot be undone (use ↩ UNDO if you change your mind).`)) return;
+  saveState();
+  voidPlayerBusiness(name);
+  transferHistory.unshift({id:Date.now(), buyer:'—', seller:fromTeam, playerName:name, amount:0, status:'✅ RELEASED (FREE)', month:monthCounter});
+  addTransaction('RELEASED', name, fromTeam, 'Free Agency', 0, 'released to market for free');
+  p.TeamName='none'; p.Roster=''; p.Salary=0; p.ContractMonths=0; p.Buyout=0; p.ReleaseClause=0; p.OnSale=0; p.OpenToOffers=0;
+  addLog(`🗑 RELEASED: ${name} cut loose by ${fromTeam} — now a FREE AGENT (no fee received).`,'warn');
+  renderOffice(); updateAll();
+}
 function toggleManaged(name){
   const p=players.find(x=>String(x.PlayerName)===name); if (!p) return;
   saveState();
@@ -2495,6 +2511,7 @@ function renderFoSquad(at){
         <button class="fo-ico" title="Toggle user-controlled" onclick="toggleManaged('${e}')">🎮</button>
         <button class="fo-ico fo-ico-wide" title="Open renewal talks" onclick="startRenewal('${e}')" ${busy?'disabled':''}>📋 RENEW</button>
         <button class="fo-ico fo-ico-wide" title="Event & award history" onclick="togglePlayerHist(this,'${e}')">🏛 HIST</button>
+        <button class="fo-ico fo-ico-wide fo-ico-danger" title="Release to free agency — player leaves for free, any club can sign him" onclick="releasePlayer('${e}')" ${busy?'disabled':''}>🗑 RELEASE</button>
       </div>
     </div>`;
   }).join('') : '<div class="fo-empty">No players match.</div>';
